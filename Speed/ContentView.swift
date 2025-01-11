@@ -325,10 +325,12 @@ class WindowManager: ObservableObject {
     }
     
     private func loadWindowPosition() {
-        if let savedPosition = UserDefaults.standard.string(forKey: "speedPosition")?.components(separatedBy: ","),
-           savedPosition.count == 2,
-           let x = Double(savedPosition[0]),
-           let y = Double(savedPosition[1]) {
+        if let savedFrame = UserDefaults.standard.string(forKey: "speedFrame")?.components(separatedBy: ","),
+           savedFrame.count == 4,
+           let x = Double(savedFrame[0]),
+           let y = Double(savedFrame[1]),
+           let width = Double(savedFrame[2]),
+           let height = Double(savedFrame[3]) {
             lastSpeedPosition = NSPoint(x: x, y: y)
         }
     }
@@ -386,17 +388,29 @@ class WindowManager: ObservableObject {
                         }
                         
                         // Use saved position or default if none saved
-                        let position = self.lastSpeedPosition ?? NSPoint(
+                        let defaultFrame = NSRect(
                             x: (NSScreen.main?.frame.width ?? 800) / 2 - 150,
-                            y: 50
+                            y: 50,
+                            width: 300,
+                            height: 50
                         )
+                        
+                        let frame: NSRect
+                        if let savedFrame = UserDefaults.standard.string(forKey: "speedFrame")?.components(separatedBy: ","),
+                           savedFrame.count == 4,
+                           let x = Double(savedFrame[0]),
+                           let y = Double(savedFrame[1]),
+                           let width = Double(savedFrame[2]),
+                           let height = Double(savedFrame[3]) {
+                            frame = NSRect(x: x, y: y, width: width, height: height)
+                        } else {
+                            frame = defaultFrame
+                        }
                         
                         // Set the frame
                         self.isSettingFrame = true
-                        window.setFrame(NSRect(x: position.x,
-                                             y: position.y,
-                                             width: 300,
-                                             height: 50), display: true, animate: true)
+                        let visibleFrame = self.ensureFrameIsVisible(frame)
+                        window.setFrame(visibleFrame, display: true, animate: true)
                         self.isSettingFrame = false
                         
                         // Set up position tracking AFTER setting initial frame
@@ -426,9 +440,9 @@ class WindowManager: ObservableObject {
                 }
                 
                 // Save the current Speed Mode position before switching back
-                let speedPosition = window.frame.origin
-                UserDefaults.standard.set("\(speedPosition.x),\(speedPosition.y)", forKey: "speedPosition")
-                lastSpeedPosition = speedPosition
+                let speedFrame = window.frame
+                UserDefaults.standard.set("\(speedFrame.origin.x),\(speedFrame.origin.y),\(speedFrame.width),\(speedFrame.height)", forKey: "speedFrame")
+                lastSpeedPosition = speedFrame.origin
                 
                 // Toggle state immediately to hide Speed Mode UI
                 isSpeedMode.toggle()
@@ -458,7 +472,8 @@ class WindowManager: ObservableObject {
                             
                             // Then set the final frame
                             self.isSettingFrame = true
-                            window.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true, animate: true)
+                            let visibleFrame = self.ensureFrameIsVisible(NSRect(x: x, y: y, width: width, height: height))
+                            window.setFrame(visibleFrame, display: true, animate: true)
                             self.isSettingFrame = false
                         }
                         
@@ -522,6 +537,31 @@ class WindowManager: ObservableObject {
             zoomLevel = max(minZoom, zoomLevel - zoomStep)
         }
         saveZoomLevel()
+    }
+    
+    private func ensureFrameIsVisible(_ proposedFrame: NSRect) -> NSRect {
+        // Get all available screens
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return proposedFrame }
+        
+        // Check if the proposed frame is visible on any screen
+        let isVisibleOnAnyScreen = screens.contains { screen in
+            screen.visibleFrame.intersects(proposedFrame)
+        }
+        
+        if isVisibleOnAnyScreen {
+            return proposedFrame
+        }
+        
+        // If not visible, use default position but keep dimensions
+        guard let mainScreen = NSScreen.main else { return proposedFrame }
+        
+        return NSRect(
+            x: (mainScreen.frame.width / 2) - (proposedFrame.width / 2),
+            y: isSpeedMode ? 50 : (mainScreen.frame.height / 2) - (proposedFrame.height / 2),
+            width: proposedFrame.width,
+            height: proposedFrame.height
+        )
     }
 }
 
@@ -1403,28 +1443,6 @@ struct SpeedModeView: View {
                         // Buttons as overlay
                         HStack(spacing: 0) {
                             Button(action: {
-                                windowManager.completeTask(task)
-                            }) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 14 * windowManager.zoomLevel))
-                                    .foregroundColor(isHoveringComplete ? .white : .green)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(Color.green.opacity(isHoveringComplete ? 0.5 : 0.1))
-                            }
-                            .buttonStyle(.plain)
-                            .onHover { hovering in
-                                isHoveringComplete = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.push()
-                                } else {
-                                    NSCursor.pop()
-                                }
-                            }
-                            .frame(width: 50)
-                            
-                            Spacer()
-                            
-                            Button(action: {
                                 windowManager.toggleSpeedMode()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
@@ -1436,6 +1454,28 @@ struct SpeedModeView: View {
                             .buttonStyle(.plain)
                             .onHover { hovering in
                                 isHoveringStop = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.push()
+                                } else {
+                                    NSCursor.pop()
+                                }
+                            }
+                            .frame(width: 50)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                windowManager.completeTask(task)
+                            }) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 14 * windowManager.zoomLevel))
+                                    .foregroundColor(isHoveringComplete ? .white : .green)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .background(Color.green.opacity(isHoveringComplete ? 0.5 : 0.1))
+                            }
+                            .buttonStyle(.plain)
+                            .onHover { hovering in
+                                isHoveringComplete = hovering
                                 if hovering {
                                     NSCursor.pointingHand.push()
                                 } else {
