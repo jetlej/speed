@@ -88,7 +88,7 @@ class WindowManager: ObservableObject {
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.isMovable = true
             window.isMovableByWindowBackground = false
-            window.minSize = NSSize(width: 400, height: 400)
+            window.minSize = NSSize(width: 300, height: 400)
             window.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
             window.level = .normal
             
@@ -113,9 +113,9 @@ class WindowManager: ObservableObject {
                 }
             } else {
                 // Set default frame for new windows
-                let frame = NSRect(x: (NSScreen.main?.frame.width ?? 800) / 2 - 200,
+                let frame = NSRect(x: (NSScreen.main?.frame.width ?? 800) / 2 - 150,
                                  y: (NSScreen.main?.frame.height ?? 600) / 2 - 200,
-                                 width: 400,
+                                 width: 300,
                                  height: 400)
                 window.setFrame(frame, display: false)
             }
@@ -372,8 +372,8 @@ class WindowManager: ObservableObject {
                         
                         window.isMovableByWindowBackground = true
                         window.isMovable = true
-                        window.minSize = NSSize(width: 300, height: 50)
-                        window.maxSize = NSSize(width: 300, height: 50)
+                        window.minSize = NSSize(width: 222, height: 35)
+                        window.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
                         window.level = .floating
                         window.backgroundColor = .black
                         window.contentView?.layer?.backgroundColor = NSColor.black.cgColor
@@ -577,6 +577,7 @@ struct ContentView: View {
                 if !windowManager.isAnimating {
                     TaskListView(windowManager: windowManager, newTaskTitle: $newTaskTitle)
                         .transition(.opacity.animation(.easeIn(duration: 0.1)))
+                        .frame(minWidth: 300, minHeight: 400)
                 } else {
                     Color.black
                 }
@@ -1494,7 +1495,7 @@ struct SpeedModeView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(minWidth: 222, minHeight: 35)
         .opacity(windowManager.isAnimating ? 0 : 1)
         .animation(.easeIn(duration: 0.2), value: windowManager.isAnimating)
         .background(MouseTrackingView(isHovered: $isHovered, onHoverChange: { hovering in

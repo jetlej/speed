@@ -213,3 +213,17 @@ button -> pointer
 input -> text
 textarea -> text
 [contenteditable] -> text 
+
+List Mode:
+- Minimum window size: 300x400
+- Resizable: Yes
+- Movable: Yes
+- Level: Normal
+
+Speed Mode:
+- Minimum window size: 222x35
+- Resizable: Yes
+- Movable: Yes
+- Level: Floating (always on top)
+- Rounded corners: 10px
+- Background: Black 
