@@ -1,0 +1,590 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		122440EC2D32091500ABB043 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = 122440EB2D32091500ABB043 /* HotKey */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1227F8922D32055B004EABEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1227F8782D320559004EABEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1227F87F2D320559004EABEF;
+			remoteInfo = Speed;
+		};
+		1227F89C2D32055B004EABEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1227F8782D320559004EABEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1227F87F2D320559004EABEF;
+			remoteInfo = Speed;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1227F8802D320559004EABEF /* Speed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Speed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1227F8912D32055B004EABEF /* SpeedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1227F89B2D32055B004EABEF /* SpeedUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeedUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1227F8822D320559004EABEF /* Speed */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Speed;
+			sourceTree = "<group>";
+		};
+		1227F8942D32055B004EABEF /* SpeedTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SpeedTests;
+			sourceTree = "<group>";
+		};
+		1227F89E2D32055B004EABEF /* SpeedUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SpeedUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1227F87D2D320559004EABEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				122440EC2D32091500ABB043 /* HotKey in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1227F88E2D32055B004EABEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1227F8982D32055B004EABEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		122440EA2D32091500ABB043 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1227F8772D320559004EABEF = {
+			isa = PBXGroup;
+			children = (
+				1227F8822D320559004EABEF /* Speed */,
+				1227F8942D32055B004EABEF /* SpeedTests */,
+				1227F89E2D32055B004EABEF /* SpeedUITests */,
+				122440EA2D32091500ABB043 /* Frameworks */,
+				1227F8812D320559004EABEF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1227F8812D320559004EABEF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1227F8802D320559004EABEF /* Speed.app */,
+				1227F8912D32055B004EABEF /* SpeedTests.xctest */,
+				1227F89B2D32055B004EABEF /* SpeedUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1227F87F2D320559004EABEF /* Speed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1227F8A52D32055B004EABEF /* Build configuration list for PBXNativeTarget "Speed" */;
+			buildPhases = (
+				1227F87C2D320559004EABEF /* Sources */,
+				1227F87D2D320559004EABEF /* Frameworks */,
+				1227F87E2D320559004EABEF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1227F8822D320559004EABEF /* Speed */,
+			);
+			name = Speed;
+			packageProductDependencies = (
+				122440EB2D32091500ABB043 /* HotKey */,
+			);
+			productName = Speed;
+			productReference = 1227F8802D320559004EABEF /* Speed.app */;
+			productType = "com.apple.product-type.application";
+		};
+		1227F8902D32055B004EABEF /* SpeedTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1227F8A82D32055B004EABEF /* Build configuration list for PBXNativeTarget "SpeedTests" */;
+			buildPhases = (
+				1227F88D2D32055B004EABEF /* Sources */,
+				1227F88E2D32055B004EABEF /* Frameworks */,
+				1227F88F2D32055B004EABEF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1227F8932D32055B004EABEF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1227F8942D32055B004EABEF /* SpeedTests */,
+			);
+			name = SpeedTests;
+			packageProductDependencies = (
+			);
+			productName = SpeedTests;
+			productReference = 1227F8912D32055B004EABEF /* SpeedTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		1227F89A2D32055B004EABEF /* SpeedUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1227F8AB2D32055B004EABEF /* Build configuration list for PBXNativeTarget "SpeedUITests" */;
+			buildPhases = (
+				1227F8972D32055B004EABEF /* Sources */,
+				1227F8982D32055B004EABEF /* Frameworks */,
+				1227F8992D32055B004EABEF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1227F89D2D32055B004EABEF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1227F89E2D32055B004EABEF /* SpeedUITests */,
+			);
+			name = SpeedUITests;
+			packageProductDependencies = (
+			);
+			productName = SpeedUITests;
+			productReference = 1227F89B2D32055B004EABEF /* SpeedUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1227F8782D320559004EABEF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					1227F87F2D320559004EABEF = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					1227F8902D32055B004EABEF = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 1227F87F2D320559004EABEF;
+					};
+					1227F89A2D32055B004EABEF = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = 1227F87F2D320559004EABEF;
+					};
+				};
+			};
+			buildConfigurationList = 1227F87B2D320559004EABEF /* Build configuration list for PBXProject "Speed" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1227F8772D320559004EABEF;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1227F8AE2D3205AD004EABEF /* XCRemoteSwiftPackageReference "HotKey" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1227F8812D320559004EABEF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1227F87F2D320559004EABEF /* Speed */,
+				1227F8902D32055B004EABEF /* SpeedTests */,
+				1227F89A2D32055B004EABEF /* SpeedUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1227F87E2D320559004EABEF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1227F88F2D32055B004EABEF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1227F8992D32055B004EABEF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1227F87C2D320559004EABEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1227F88D2D32055B004EABEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1227F8972D32055B004EABEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1227F8932D32055B004EABEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1227F87F2D320559004EABEF /* Speed */;
+			targetProxy = 1227F8922D32055B004EABEF /* PBXContainerItemProxy */;
+		};
+		1227F89D2D32055B004EABEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1227F87F2D320559004EABEF /* Speed */;
+			targetProxy = 1227F89C2D32055B004EABEF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1227F8A32D32055B004EABEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		1227F8A42D32055B004EABEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		1227F8A62D32055B004EABEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Speed/Speed.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Speed/Preview Content\"";
+				DEVELOPMENT_TEAM = 34HCA7L7PV;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Speed.Speed;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1227F8A72D32055B004EABEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Speed/Speed.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Speed/Preview Content\"";
+				DEVELOPMENT_TEAM = 34HCA7L7PV;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Speed.Speed;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		1227F8A92D32055B004EABEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 34HCA7L7PV;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Speed.SpeedTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Speed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Speed";
+			};
+			name = Debug;
+		};
+		1227F8AA2D32055B004EABEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 34HCA7L7PV;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Speed.SpeedTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Speed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Speed";
+			};
+			name = Release;
+		};
+		1227F8AC2D32055B004EABEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 34HCA7L7PV;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Speed.SpeedUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Speed;
+			};
+			name = Debug;
+		};
+		1227F8AD2D32055B004EABEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 34HCA7L7PV;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Speed.SpeedUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Speed;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1227F87B2D320559004EABEF /* Build configuration list for PBXProject "Speed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1227F8A32D32055B004EABEF /* Debug */,
+				1227F8A42D32055B004EABEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1227F8A52D32055B004EABEF /* Build configuration list for PBXNativeTarget "Speed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1227F8A62D32055B004EABEF /* Debug */,
+				1227F8A72D32055B004EABEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1227F8A82D32055B004EABEF /* Build configuration list for PBXNativeTarget "SpeedTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1227F8A92D32055B004EABEF /* Debug */,
+				1227F8AA2D32055B004EABEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1227F8AB2D32055B004EABEF /* Build configuration list for PBXNativeTarget "SpeedUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1227F8AC2D32055B004EABEF /* Debug */,
+				1227F8AD2D32055B004EABEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1227F8AE2D3205AD004EABEF /* XCRemoteSwiftPackageReference "HotKey" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/soffes/HotKey";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		122440EB2D32091500ABB043 /* HotKey */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1227F8AE2D3205AD004EABEF /* XCRemoteSwiftPackageReference "HotKey" */;
+			productName = HotKey;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 1227F8782D320559004EABEF /* Project object */;
+}

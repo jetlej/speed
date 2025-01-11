@@ -1,0 +1,215 @@
+# Slash - Cursor Rules
+
+## Overview
+Slash is a minimal macOS task management app with a unique "Slash Mode" feature for focused task completion.
+
+## Meta Rules
+- This cursor.rules file must be updated whenever:
+  - New features are added
+  - Existing features are modified
+  - Requirements are changed
+  - Behavior rules are adjusted
+  - Visual states are altered
+  - UI elements are modified
+
+## Core Features
+
+### Task Management
+- Add tasks by typing and pressing Enter
+- Add multiple tasks by pasting text:
+  - Each line becomes a separate task
+  - Common list prefixes are automatically removed:
+    - Markdown list markers (-, *, +)
+    - Checkbox markers ([ ], [x], etc.)
+    - Numbered list markers (1., 2., etc.)
+    - Things app format ([ ] MM/DD/YYYY)
+  - Empty lines are ignored
+  - Paste operation is treated as a single undo/redo action
+- Mark tasks as complete by clicking the circle icon
+  - Circle icon shows pointer cursor on hover
+  - Circle changes from gray to green on hover
+  - Clicking marks task as complete
+- Tasks show as gray and strikethrough when completed
+- Tasks can be edited by double-clicking
+- Tasks can be selected by clicking
+- Tasks show visual feedback on hover and selection
+- Completed tasks are hidden but preserved in storage
+- Tasks persist between app launches and window reopens
+- Full undo/redo support for all task operations
+
+### Task Selection and Movement
+- Single click: Selects a single task
+- Command+click: Toggles task selection (add/remove from selection)
+- Shift+click: Selects range of tasks between last selected and clicked task
+- Multiple selected tasks:
+  - Show 10% white background on all selected tasks
+  - Can be deleted together with Delete key
+  - Can be moved together:
+    - Command+up/down: Move selection one position
+    - Command+option+up: Move selection to top
+    - Command+option+down: Move selection to bottom
+  - Maintain relative order when moving
+- Selection states:
+  - Selected tasks show 10% white background
+  - Hover shows 5% white background
+  - States are mutually exclusive with editing
+  - Clicking input field clears selection
+
+### Task Interactions
+- Entire task row is clickable for selection
+- Checkbox and frog buttons maintain separate click areas
+- Double click anywhere on row (except buttons) to edit
+- Hover effects:
+  - Entire row shows pointer cursor
+  - Buttons show their own pointer cursors
+  - Background highlight covers entire row
+  - 6px rounded corners on hover/selection states
+
+### Frog Task Feature
+- Only one incomplete task can be marked as "frog" at a time
+- Frog tasks are pinned to the top of the list
+- Frog tasks are styled with:
+  - Bold text
+  - #8CFF00 text color
+  - Frog emoji (🐸)
+- Frog emoji interaction:
+  - Appears at 10% opacity when hovering over any task
+  - Shows 50% opacity when hovering over the emoji itself
+  - Shows 70% opacity when hovering over an active frog's emoji
+  - Shows 100% opacity for active frog task
+  - Cursor changes to pointer when hovering over emoji
+  - Clicking toggles frog status
+- In Slash Mode:
+  - Frog emoji appears before task text
+  - Task inherits frog styling (bold, #8CFF00)
+- Task reordering animates smoothly when frog status changes
+- Completed tasks retain their frog status
+- Marking a task as frog removes frog status from other incomplete tasks
+
+### Window Modes
+
+#### List Mode (400x400)
+- Full task list view (showing only uncompleted tasks)
+- Black background with white text
+- Standard window controls
+- Centered on screen by default
+- Resizable with minimum size of 400x400
+- Always starts in this mode when app opens
+- Window position and size persist between launches
+
+#### Slash Mode (300x50)
+- Triggered by bolt button or global Option + Command + Enter shortcut (disabled when no tasks exist)
+- Shows only the current (first uncompleted) task
+- Window properties:
+  - Fixed size: 300x50
+  - Frameless window (no title bar or controls)
+  - 5px rounded corners
+  - Black background
+  - Floats above other windows
+  - Fully draggable from anywhere
+  - Remembers last position between toggles and app launches
+  - Default position: centered horizontally, 50px from bottom
+- Task display:
+  - Task text centered by default
+  - Task text uses 16pt medium font (2pt larger than list mode)
+  - Controls hidden by default
+  - On hover: task text hides, controls appear centered
+  - Automatically exits when all tasks are completed
+
+### UI Elements
+
+#### Task Input
+- Single text field for task entry
+- White text on dark background
+- Submit via Enter key only
+- Clears after submission
+- Light gray (30% white) 2px bottom border with 8px padding
+- 14px left padding to align with task text
+- Auto-focuses when:
+  - App launches
+  - Returning to List Mode from Slash Mode
+
+#### Task List
+- Black background
+- White text for active tasks
+- Gray text for completed tasks
+- Green checkmark for completed tasks
+- Gray circle for incomplete tasks
+- No separators between tasks (black dividers only visible during drag)
+- Rounded corners on hover/selection states
+- 6px vertical padding on each task
+- Only shows uncompleted tasks
+
+#### Slash Button
+- Full width
+- White background with black bolt icon
+- 14pt bold font
+- 10px rounded corners
+- Disabled when task list is empty
+- Cursor changes to pointing hand on hover
+
+#### Slash Mode Controls
+- Green checkmark button to complete current task
+- Red X button to exit Slash mode
+- Controls appear centered on hover
+- Smooth fade transition between task text and controls
+- "All tasks completed!" message when no tasks remain
+
+## Behavior Rules
+
+### Window Management
+- Window position and size are preserved between launches
+- Window position is preserved in Slash Mode
+- Returns to center in List Mode if no saved position
+- Smooth spring animation between modes
+- Window level changes to float in Slash Mode
+- UI elements fade in after window animation completes (0.15s delay)
+
+### Task Handling
+- Tasks are completed in order (first uncompleted task is current)
+- Completing the current task in Slash Mode shows the next task
+- Empty task submissions are ignored
+- Task additions are animated
+- Task selection moves to next task after deletion
+- Task editing and selection states are mutually exclusive
+- Completing last task in Slash Mode automatically exits to List Mode
+- Tasks persist in UserDefaults between app launches
+- Completed tasks are stored with completion timestamps
+- Tasks cannot be uncompleted once marked complete
+- All task operations support undo/redo:
+  - Adding tasks
+  - Completing tasks
+  - Editing task text
+  - Deleting tasks
+  - Reordering tasks
+
+### Visual States
+- Tasks show immediate visual feedback when completed
+- Window transitions use spring animation
+- Hover states use subtle white backgrounds
+- Selection states use slightly stronger white backgrounds
+- List supports drag-to-reorder visual feedback
+- Mode transitions smoothly fade between states 
+
+# Cursor rules
+.gitignore
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata/* 
+
+// Cursor Rules
+// Format: selector -> cursor
+// Available cursors: default, text, pointer, crosshair, move, grab, grabbing, ew-resize, ns-resize, nesw-resize, nwse-resize, zoom-in, zoom-out, not-allowed
+
+// Buttons and interactive elements
+button -> pointer
+[role="button"] -> pointer
+.clickable -> pointer
+🐸 -> pointer
+
+// Text input and selection
+input -> text
+textarea -> text
+[contenteditable] -> text 
