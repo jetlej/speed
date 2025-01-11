@@ -12,16 +12,19 @@ import AppKit
 struct SlashApp: App {
     @StateObject private var windowManager = WindowManager()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @State private var didSetupShortcuts = false
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(windowManager)
                 .onAppear {
-                    // Set up after a brief delay to ensure window is ready
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        print("Setting up shortcuts...")
-                        GlobalShortcuts.shared.setup(with: windowManager)
+                    if !didSetupShortcuts {
+                        // Set up after a brief delay to ensure window is ready
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            GlobalShortcuts.shared.setup(with: windowManager)
+                            didSetupShortcuts = true
+                        }
                     }
                 }
         }
