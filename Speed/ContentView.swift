@@ -329,8 +329,8 @@ class WindowManager: ObservableObject {
            savedFrame.count == 4,
            let x = Double(savedFrame[0]),
            let y = Double(savedFrame[1]),
-           let width = Double(savedFrame[2]),
-           let height = Double(savedFrame[3]) {
+           let _ = Double(savedFrame[2]),
+           let _ = Double(savedFrame[3]) {
             lastSpeedPosition = NSPoint(x: x, y: y)
         }
     }
@@ -359,78 +359,72 @@ class WindowManager: ObservableObject {
                 let frame = window.frame
                 UserDefaults.standard.set("\(frame.origin.x),\(frame.origin.y),\(frame.width),\(frame.height)", forKey: "windowFrame")
                 
-                // Toggle state immediately to hide List Mode UI
+                // Configure window properties for Speed Mode before any visual changes
+                let tempFrame = window.frame
+                window.styleMask = [.borderless, .fullSizeContentView]
+                window.setFrame(tempFrame, display: false)
+                window.isMovableByWindowBackground = true
+                window.isMovable = true
+                window.minSize = NSSize(width: 222, height: 35)
+                window.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+                window.level = .floating
+                window.backgroundColor = .black
+                window.contentView?.layer?.backgroundColor = NSColor.black.cgColor
+                window.contentView?.layer?.cornerRadius = 10
+                window.contentView?.layer?.masksToBounds = true
+                
+                // Make sure the window itself has rounded corners
+                if let windowView = window.contentView?.superview {
+                    windowView.wantsLayer = true
+                    windowView.layer?.cornerRadius = 10
+                    windowView.layer?.masksToBounds = true
+                }
+                
+                // Toggle state after window is configured but before animation
                 isSpeedMode.toggle()
                 
-                // Small delay to ensure UI has updated
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
-                    withAnimation(.none) {
-                        // Configure window properties for Speed Mode
-                        let tempFrame = window.frame
-                        window.styleMask = [.borderless, .fullSizeContentView]
-                        window.setFrame(tempFrame, display: false)
-                        
-                        window.isMovableByWindowBackground = true
-                        window.isMovable = true
-                        window.minSize = NSSize(width: 222, height: 35)
-                        window.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-                        window.level = .floating
-                        window.backgroundColor = .black
-                        window.contentView?.layer?.backgroundColor = NSColor.black.cgColor
-                        window.contentView?.layer?.cornerRadius = 10
-                        window.contentView?.layer?.masksToBounds = true
-                        
-                        // Make sure the window itself has rounded corners
-                        if let windowView = window.contentView?.superview {
-                            windowView.wantsLayer = true
-                            windowView.layer?.cornerRadius = 10
-                            windowView.layer?.masksToBounds = true
-                        }
-                        
-                        // Use saved position or default if none saved
-                        let defaultFrame = NSRect(
-                            x: (NSScreen.main?.frame.width ?? 800) / 2 - 150,
-                            y: 50,
-                            width: 300,
-                            height: 50
-                        )
-                        
-                        let frame: NSRect
-                        if let savedFrame = UserDefaults.standard.string(forKey: "speedFrame")?.components(separatedBy: ","),
-                           savedFrame.count == 4,
-                           let x = Double(savedFrame[0]),
-                           let y = Double(savedFrame[1]),
-                           let width = Double(savedFrame[2]),
-                           let height = Double(savedFrame[3]) {
-                            frame = NSRect(x: x, y: y, width: width, height: height)
-                        } else {
-                            frame = defaultFrame
-                        }
-                        
-                        // Set the frame
-                        self.isSettingFrame = true
-                        let visibleFrame = self.ensureFrameIsVisible(frame)
-                        window.setFrame(visibleFrame, display: true, animate: true)
-                        self.isSettingFrame = false
-                        
-                        // Set up position tracking AFTER setting initial frame
-                        self.positionObserver = NotificationCenter.default.addObserver(
-                            forName: NSWindow.didMoveNotification,
-                            object: window,
-                            queue: .main) { [weak self] notification in
-                                guard let self = self,
-                                      !self.isSettingFrame,
-                                      let window = notification.object as? NSWindow else { return }
-                                self.lastSpeedPosition = window.frame.origin
-                                UserDefaults.standard.set("\(window.frame.origin.x),\(window.frame.origin.y)", forKey: "speedPosition")
-                            }
-                        
-                        // Add a delay to match the animation
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            self.isAnimating = false
-                            self.shouldFocusInput = true
-                        }
+                // Use saved position or default if none saved
+                let defaultFrame = NSRect(
+                    x: (NSScreen.main?.frame.width ?? 800) / 2 - 150,
+                    y: 50,
+                    width: 300,
+                    height: 50
+                )
+                
+                let speedModeFrame: NSRect
+                if let savedFrame = UserDefaults.standard.string(forKey: "speedFrame")?.components(separatedBy: ","),
+                   savedFrame.count == 4,
+                   let x = Double(savedFrame[0]),
+                   let y = Double(savedFrame[1]),
+                   let width = Double(savedFrame[2]),
+                   let height = Double(savedFrame[3]) {
+                    speedModeFrame = NSRect(x: x, y: y, width: width, height: height)
+                } else {
+                    speedModeFrame = defaultFrame
+                }
+                
+                // Set the frame with animation
+                self.isSettingFrame = true
+                let visibleFrame = self.ensureFrameIsVisible(speedModeFrame)
+                window.setFrame(visibleFrame, display: true, animate: true)
+                self.isSettingFrame = false
+                
+                // Set up position tracking AFTER setting initial frame
+                self.positionObserver = NotificationCenter.default.addObserver(
+                    forName: NSWindow.didMoveNotification,
+                    object: window,
+                    queue: .main) { [weak self] notification in
+                        guard let self = self,
+                              !self.isSettingFrame,
+                              let window = notification.object as? NSWindow else { return }
+                        self.lastSpeedPosition = window.frame.origin
+                        UserDefaults.standard.set("\(window.frame.origin.x),\(window.frame.origin.y)", forKey: "speedPosition")
                     }
+                
+                // End animation after the frame animation completes
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.isAnimating = false
+                    self.shouldFocusInput = true
                 }
             } else {
                 // If we're exiting Speed mode, remove the observer FIRST
@@ -576,8 +570,13 @@ struct ContentView: View {
             } else {
                 if !windowManager.isAnimating {
                     TaskListView(windowManager: windowManager, newTaskTitle: $newTaskTitle)
-                        .transition(.opacity.animation(.easeIn(duration: 0.1)))
                         .frame(minWidth: 300, minHeight: 400)
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(.easeIn(duration: 0.15)),
+                                removal: .opacity.animation(.none)
+                            )
+                        )
                 } else {
                     Color.black
                 }
@@ -1497,7 +1496,7 @@ struct SpeedModeView: View {
         }
         .frame(minWidth: 222, minHeight: 35)
         .opacity(windowManager.isAnimating ? 0 : 1)
-        .animation(.easeIn(duration: 0.2), value: windowManager.isAnimating)
+        .animation(.easeIn(duration: 0.15), value: windowManager.isAnimating)
         .background(MouseTrackingView(isHovered: $isHovered, onHoverChange: { hovering in
             if !hovering {
                 isHoveringComplete = false
