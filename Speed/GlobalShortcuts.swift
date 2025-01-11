@@ -5,34 +5,34 @@ import Carbon
 class GlobalShortcuts {
     static let shared = GlobalShortcuts()
     
-    private var slashModeHotKey: HotKey?
+    private var speedModeHotKey: HotKey?
     private weak var windowManager: WindowManager?
     
     private init() {}
     
     func setup(with windowManager: WindowManager) {
         self.windowManager = windowManager
-        setupSlashModeShortcut()
+        setupSpeedModeShortcut()
     }
     
-    private func setupSlashModeShortcut() {
+    private func setupSpeedModeShortcut() {
         // Clean up any existing hotkey
-        slashModeHotKey = nil
+        speedModeHotKey = nil
         
         // Option + Command + Enter
-        slashModeHotKey = HotKey(key: .return, modifiers: [.command, .option])
+        speedModeHotKey = HotKey(key: .return, modifiers: [.command, .option])
         
-        slashModeHotKey?.keyDownHandler = { [weak self] in
+        speedModeHotKey?.keyDownHandler = { [weak self] in
             guard let self = self,
                   let windowManager = self.windowManager,
                   !windowManager.activeTasks.isEmpty else { return }
             
             DispatchQueue.main.async {
-                // If we're in Slash Mode, focus the app when returning to List Mode
-                if windowManager.isSlashMode {
+                // If we're in Speed Mode, focus the app when returning to List Mode
+                if windowManager.isSpeedMode {
                     NSApplication.shared.activate(ignoringOtherApps: true)
                 }
-                windowManager.toggleSlashMode()
+                windowManager.toggleSpeedMode()
             }
         }
     }

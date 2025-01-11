@@ -1,6 +1,6 @@
 //
-//  SlashApp.swift
-//  Slash
+//  SpeedApp.swift
+//  Speed
 //
 //  Created by Jordan Lejuwaan on 12/29/24.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct SlashApp: App {
+struct SpeedApp: App {
     @StateObject private var windowManager = WindowManager()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var didSetupShortcuts = false

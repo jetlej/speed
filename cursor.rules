@@ -1,7 +1,7 @@
-# Slash - Cursor Rules
+# Speed - Cursor Rules
 
 ## Overview
-Slash is a minimal macOS task management app with a unique "Slash Mode" feature for focused task completion.
+Speed is a minimal macOS task management app with a unique "Speed Mode" feature for focused task completion.
 
 ## Meta Rules
 - This cursor.rules file must be updated whenever:
@@ -79,7 +79,7 @@ Slash is a minimal macOS task management app with a unique "Slash Mode" feature 
   - Shows 100% opacity for active frog task
   - Cursor changes to pointer when hovering over emoji
   - Clicking toggles frog status
-- In Slash Mode:
+- In Speed Mode:
   - Frog emoji appears before task text
   - Task inherits frog styling (bold, #8CFF00)
 - Task reordering animates smoothly when frog status changes
@@ -97,7 +97,7 @@ Slash is a minimal macOS task management app with a unique "Slash Mode" feature 
 - Always starts in this mode when app opens
 - Window position and size persist between launches
 
-#### Slash Mode (300x50)
+#### Speed Mode (300x50)
 - Triggered by bolt button or global Option + Command + Enter shortcut (disabled when no tasks exist)
 - Shows only the current (first uncompleted) task
 - Window properties:
@@ -127,7 +127,7 @@ Slash is a minimal macOS task management app with a unique "Slash Mode" feature 
 - 14px left padding to align with task text
 - Auto-focuses when:
   - App launches
-  - Returning to List Mode from Slash Mode
+  - Returning to List Mode from Speed Mode
 
 #### Task List
 - Black background
@@ -140,7 +140,7 @@ Slash is a minimal macOS task management app with a unique "Slash Mode" feature 
 - 6px vertical padding on each task
 - Only shows uncompleted tasks
 
-#### Slash Button
+#### Speed Button
 - Full width
 - White background with black bolt icon
 - 14pt bold font
@@ -148,9 +148,9 @@ Slash is a minimal macOS task management app with a unique "Slash Mode" feature 
 - Disabled when task list is empty
 - Cursor changes to pointing hand on hover
 
-#### Slash Mode Controls
+#### Speed Mode Controls
 - Green checkmark button to complete current task
-- Red X button to exit Slash mode
+- Red X button to exit Speed mode
 - Controls appear centered on hover
 - Smooth fade transition between task text and controls
 - "All tasks completed!" message when no tasks remain
@@ -159,20 +159,20 @@ Slash is a minimal macOS task management app with a unique "Slash Mode" feature 
 
 ### Window Management
 - Window position and size are preserved between launches
-- Window position is preserved in Slash Mode
+- Window position is preserved in Speed Mode
 - Returns to center in List Mode if no saved position
 - Smooth spring animation between modes
-- Window level changes to float in Slash Mode
+- Window level changes to float in Speed Mode
 - UI elements fade in after window animation completes (0.15s delay)
 
 ### Task Handling
 - Tasks are completed in order (first uncompleted task is current)
-- Completing the current task in Slash Mode shows the next task
+- Completing the current task in Speed Mode shows the next task
 - Empty task submissions are ignored
 - Task additions are animated
 - Task selection moves to next task after deletion
 - Task editing and selection states are mutually exclusive
-- Completing last task in Slash Mode automatically exits to List Mode
+- Completing last task in Speed Mode automatically exits to List Mode
 - Tasks persist in UserDefaults between app launches
 - Completed tasks are stored with completion timestamps
 - Tasks cannot be uncompleted once marked complete

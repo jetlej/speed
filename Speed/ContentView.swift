@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  Slash
+//  Speed
 //
 //  Created by Jordan Lejuwaan on 12/29/24.
 //
@@ -47,9 +47,9 @@ struct Task: Identifiable, Equatable, Codable {
 }
 
 class WindowManager: ObservableObject {
-    @Published var isSlashMode = false
+    @Published var isSpeedMode = false
     @Published var isAnimating = false
-    @Published var lastSlashPosition: NSPoint?
+    @Published var lastSpeedPosition: NSPoint?
     @Published var tasks: [Task] = []
     @Published var shouldFocusInput = false
     @Published var zoomLevel: Double = 1.0
@@ -167,9 +167,9 @@ class WindowManager: ObservableObject {
             saveTasks()
             registerUndoRedoOperation(oldTasks: oldTasks, newTasks: tasks, actionName: "Complete Task")
             
-            // If in slash mode and no more active tasks, exit slash mode
-            if isSlashMode && activeTasks.isEmpty {
-                toggleSlashMode()
+            // If in speed mode and no more active tasks, exit speed mode
+            if isSpeedMode && activeTasks.isEmpty {
+                toggleSpeedMode()
             }
         }
     }
@@ -325,45 +325,45 @@ class WindowManager: ObservableObject {
     }
     
     private func loadWindowPosition() {
-        if let savedPosition = UserDefaults.standard.string(forKey: "slashPosition")?.components(separatedBy: ","),
+        if let savedPosition = UserDefaults.standard.string(forKey: "speedPosition")?.components(separatedBy: ","),
            savedPosition.count == 2,
            let x = Double(savedPosition[0]),
            let y = Double(savedPosition[1]) {
-            lastSlashPosition = NSPoint(x: x, y: y)
+            lastSpeedPosition = NSPoint(x: x, y: y)
         }
     }
     
     @objc private func windowDidResize(_ notification: Notification) {
-        if let window = notification.object as? NSWindow, !isSlashMode {
+        if let window = notification.object as? NSWindow, !isSpeedMode {
             let frame = window.frame
             UserDefaults.standard.set("\(frame.origin.x),\(frame.origin.y),\(frame.width),\(frame.height)", forKey: "windowFrame")
         }
     }
     
     @objc private func windowDidMove(_ notification: Notification) {
-        if let window = notification.object as? NSWindow, !isSlashMode {
+        if let window = notification.object as? NSWindow, !isSpeedMode {
             let frame = window.frame
             UserDefaults.standard.set("\(frame.origin.x),\(frame.origin.y),\(frame.width),\(frame.height)", forKey: "windowFrame")
         }
     }
     
-    func toggleSlashMode() {
+    func toggleSpeedMode() {
         if let window = NSApplication.shared.windows.first {
             // Start animation immediately
             isAnimating = true
             
-            if !isSlashMode {
-                // Save the current List Mode frame before switching to Slash Mode
+            if !isSpeedMode {
+                // Save the current List Mode frame before switching to Speed Mode
                 let frame = window.frame
                 UserDefaults.standard.set("\(frame.origin.x),\(frame.origin.y),\(frame.width),\(frame.height)", forKey: "windowFrame")
                 
                 // Toggle state immediately to hide List Mode UI
-                isSlashMode.toggle()
+                isSpeedMode.toggle()
                 
                 // Small delay to ensure UI has updated
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
                     withAnimation(.none) {
-                        // Configure window properties for Slash Mode
+                        // Configure window properties for Speed Mode
                         let tempFrame = window.frame
                         window.styleMask = [.borderless, .fullSizeContentView]
                         window.setFrame(tempFrame, display: false)
@@ -386,7 +386,7 @@ class WindowManager: ObservableObject {
                         }
                         
                         // Use saved position or default if none saved
-                        let position = self.lastSlashPosition ?? NSPoint(
+                        let position = self.lastSpeedPosition ?? NSPoint(
                             x: (NSScreen.main?.frame.width ?? 800) / 2 - 150,
                             y: 50
                         )
@@ -407,8 +407,8 @@ class WindowManager: ObservableObject {
                                 guard let self = self,
                                       !self.isSettingFrame,
                                       let window = notification.object as? NSWindow else { return }
-                                self.lastSlashPosition = window.frame.origin
-                                UserDefaults.standard.set("\(window.frame.origin.x),\(window.frame.origin.y)", forKey: "slashPosition")
+                                self.lastSpeedPosition = window.frame.origin
+                                UserDefaults.standard.set("\(window.frame.origin.x),\(window.frame.origin.y)", forKey: "speedPosition")
                             }
                         
                         // Add a delay to match the animation
@@ -419,19 +419,19 @@ class WindowManager: ObservableObject {
                     }
                 }
             } else {
-                // If we're exiting Slash mode, remove the observer FIRST
+                // If we're exiting Speed mode, remove the observer FIRST
                 if let observer = positionObserver {
                     NotificationCenter.default.removeObserver(observer)
                     positionObserver = nil
                 }
                 
-                // Save the current Slash Mode position before switching back
-                let slashPosition = window.frame.origin
-                UserDefaults.standard.set("\(slashPosition.x),\(slashPosition.y)", forKey: "slashPosition")
-                lastSlashPosition = slashPosition
+                // Save the current Speed Mode position before switching back
+                let speedPosition = window.frame.origin
+                UserDefaults.standard.set("\(speedPosition.x),\(speedPosition.y)", forKey: "speedPosition")
+                lastSpeedPosition = speedPosition
                 
-                // Toggle state immediately to hide Slash Mode UI
-                isSlashMode.toggle()
+                // Toggle state immediately to hide Speed Mode UI
+                isSpeedMode.toggle()
                 
                 // Small delay to ensure UI has updated
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.001) {
@@ -531,8 +531,8 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if windowManager.isSlashMode {
-                SlashModeView(tasks: $windowManager.tasks, windowManager: windowManager)
+            if windowManager.isSpeedMode {
+                SpeedModeView(tasks: $windowManager.tasks, windowManager: windowManager)
             } else {
                 if !windowManager.isAnimating {
                     TaskListView(windowManager: windowManager, newTaskTitle: $newTaskTitle)
@@ -845,7 +845,7 @@ struct TaskPositionPreferenceKey: PreferenceKey {
     }
 }
 
-struct SlashButton: View {
+struct SpeedButton: View {
     let isDisabled: Bool
     let action: () -> Void
     @ObservedObject var windowManager: WindowManager
@@ -1001,11 +1001,11 @@ struct TaskListView: View {
                 onDelete: handleDelete
             )
             
-            SlashButton(
+            SpeedButton(
                 isDisabled: windowManager.activeTasks.isEmpty,
                 action: {
                     uiState = .normal
-                    windowManager.toggleSlashMode()
+                    windowManager.toggleSpeedMode()
                 },
                 windowManager: windowManager
             )
@@ -1375,7 +1375,7 @@ class DoubleClickView: NSView {
     }
 }
 
-struct SlashModeView: View {
+struct SpeedModeView: View {
     @Binding var tasks: [Task]
     @ObservedObject var windowManager: WindowManager
     @State private var isHovered = false
@@ -1425,7 +1425,7 @@ struct SlashModeView: View {
                             Spacer()
                             
                             Button(action: {
-                                windowManager.toggleSlashMode()
+                                windowManager.toggleSpeedMode()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 14 * windowManager.zoomLevel))
@@ -1464,7 +1464,7 @@ struct SlashModeView: View {
             }
         }))
         .onAppear {
-            // Reset all hover states when entering Slash Mode
+            // Reset all hover states when entering Speed Mode
             isHovered = false
             isHoveringComplete = false
             isHoveringStop = false
