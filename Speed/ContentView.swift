@@ -764,6 +764,47 @@ struct TaskListContent: View {
                         onSelect: { event in onTaskSelection(task.id, event) },
                         onStartEditing: { onStartEditing(task.id) },
                         onEndEditing: { onEndEditing(task.id, $0) },
+                        onDragChange: { task, deltaY in
+                            if draggingTask == nil {
+                                draggingTask = task
+                            }
+                            
+                            if draggingTask?.id == task.id {
+                                dragOffset = deltaY
+                                
+                                if let currentIndex = activeTasks.firstIndex(where: { $0.id == task.id }) {
+                                    let taskHeight = taskPositions[task.id]?.height ?? 0
+                                    
+                                    // Calculate how many positions to move based on drag distance
+                                    let dragDistance = deltaY
+                                    let positionsToMove = taskHeight > 0 ? Int(round(dragDistance / taskHeight)) : 0
+                                    
+                                    // Calculate target index
+                                    let targetIndex = max(0, min(activeTasks.count - 1, currentIndex + positionsToMove))
+                                    
+                                    // Only update preview if we're actually moving and not a frog task
+                                    if targetIndex != currentIndex && (!task.isFrog || activeTasks[targetIndex].isFrog) {
+                                        previewIndex = targetIndex
+                                    } else {
+                                        previewIndex = nil
+                                    }
+                                }
+                            }
+                        },
+                        onDragEnd: { task in
+                            if let sourceIndex = activeTasks.firstIndex(where: { $0.id == task.id }),
+                               let targetIndex = previewIndex {
+                                // Move the task first
+                                onMove(IndexSet(integer: sourceIndex), targetIndex)
+                            }
+                            
+                            // Reset all states after the move
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                dragOffset = 0
+                                draggingTask = nil
+                                previewIndex = nil
+                            }
+                        },
                         windowManager: windowManager
                     )
                     .transition(.scale(scale: 1, anchor: .leading).combined(with: .opacity))
@@ -814,50 +855,6 @@ struct TaskListContent: View {
                     }())
                     .zIndex(isBeingDragged ? 1 : 0)
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: previewIndex)
-                    .gesture(
-                        DragGesture(coordinateSpace: .named("scroll"))
-                            .onChanged { value in
-                                if draggingTask == nil {
-                                    draggingTask = task
-                                }
-                                
-                                if draggingTask?.id == task.id {
-                                    dragOffset = value.translation.height
-                                    
-                                    if let currentIndex = activeTasks.firstIndex(where: { $0.id == task.id }) {
-                                        let taskHeight = taskPositions[task.id]?.height ?? 0
-                                        
-                                        // Calculate how many positions to move based on drag distance
-                                        let dragDistance = value.translation.height
-                                        let positionsToMove = taskHeight > 0 ? Int(round(dragDistance / taskHeight)) : 0
-                                        
-                                        // Calculate target index
-                                        let targetIndex = max(0, min(activeTasks.count - 1, currentIndex + positionsToMove))
-                                        
-                                        // Only update preview if we're actually moving and not a frog task
-                                        if targetIndex != currentIndex && (!task.isFrog || activeTasks[targetIndex].isFrog) {
-                                            previewIndex = targetIndex
-                                        } else {
-                                            previewIndex = nil
-                                        }
-                                    }
-                                }
-                            }
-                            .onEnded { value in
-                                if let sourceIndex = activeTasks.firstIndex(where: { $0.id == task.id }),
-                                   let targetIndex = previewIndex {
-                                    // Move the task first
-                                    onMove(IndexSet(integer: sourceIndex), targetIndex)
-                                }
-                                
-                                // Reset all states after the move
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    dragOffset = 0
-                                    draggingTask = nil
-                                    previewIndex = nil
-                                }
-                            }
-                    )
                 }
             }
             .padding(.vertical, 8)
@@ -1249,6 +1246,8 @@ struct TaskRow: View {
     let onSelect: (NSEvent?) -> Void
     let onStartEditing: () -> Void
     let onEndEditing: (String?) -> Void
+    let onDragChange: ((Task, CGFloat) -> Void)?
+    let onDragEnd: ((Task) -> Void)?
     @State private var editedTitle: String = ""
     @State private var isHovered = false
     @State private var isFrogHovered = false
@@ -1262,17 +1261,6 @@ struct TaskRow: View {
                 Color.white.opacity(0.1)
             } else if isHovered && !isEditing {
                 Color.white.opacity(0.05)
-            }
-            
-            // Click handler layer for the entire row except buttons
-            if !isEditing {
-                ClickView(
-                    onClick: { event in onSelect(event) },
-                    onDoubleClick: {
-                        editedTitle = task.title
-                        onStartEditing()
-                    }
-                )
             }
             
             // Content layer
@@ -1323,7 +1311,6 @@ struct TaskRow: View {
                             .strikethrough(task.isCompleted)
                             .foregroundColor(task.isCompleted ? .gray : (task.isFrog ? Color(hex: "8CFF00") : .white))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .allowsHitTesting(false)
                         
                         if isHovered || task.isFrog {
                             Button(action: {
@@ -1349,6 +1336,24 @@ struct TaskRow: View {
             }
             .padding(.vertical, 6 * windowManager.zoomLevel)
             .padding(.horizontal, 14 * windowManager.zoomLevel)
+            
+            // Click and drag handler overlay
+            if !isEditing {
+                ClickView(
+                    onClick: { event in onSelect(event) },
+                    onDoubleClick: {
+                        editedTitle = task.title
+                        onStartEditing()
+                    },
+                    onDragChange: { deltaY in
+                        onDragChange?(task, deltaY)
+                    },
+                    onDragEnd: {
+                        onDragEnd?(task)
+                    }
+                )
+                .allowsHitTesting(true)
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 6 * windowManager.zoomLevel))
         .padding(.horizontal, 8 * windowManager.zoomLevel)
@@ -1360,27 +1365,43 @@ struct TaskRow: View {
                 NSCursor.pop()
             }
         }
+        .contentShape(Rectangle())
     }
 }
 
 struct ClickView: NSViewRepresentable {
     let onClick: (NSEvent?) -> Void
     let onDoubleClick: () -> Void
+    let onDragChange: ((CGFloat) -> Void)?
+    let onDragEnd: (() -> Void)?
     
     func makeNSView(context: Context) -> DoubleClickView {
         let view = DoubleClickView()
         view.onClick = onClick
         view.onDoubleClick = onDoubleClick
+        view.onDragChange = onDragChange
+        view.onDragEnd = onDragEnd
         view.wantsLayer = true
         return view
     }
     
-    func updateNSView(_ nsView: DoubleClickView, context: Context) {}
+    func updateNSView(_ nsView: DoubleClickView, context: Context) {
+        nsView.onClick = onClick
+        nsView.onDoubleClick = onDoubleClick
+        nsView.onDragChange = onDragChange
+        nsView.onDragEnd = onDragEnd
+    }
 }
 
 class DoubleClickView: NSView {
     var onClick: ((NSEvent?) -> Void)?
     var onDoubleClick: () -> Void = {}
+    var onDragChange: ((CGFloat) -> Void)?
+    var onDragEnd: (() -> Void)?
+    
+    private var isDragging = false
+    private var initialClickLocation: NSPoint?
+    private var dragThreshold: CGFloat = 3 // pixels to move before considering it a drag
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -1399,9 +1420,43 @@ class DoubleClickView: NSView {
     }
     
     override func mouseDown(with event: NSEvent) {
+        initialClickLocation = event.locationInWindow
+        isDragging = false
+        
+        // Handle double click immediately
         if event.clickCount == 2 {
             onDoubleClick()
-        } else if event.clickCount == 1 {
+            initialClickLocation = nil
+        }
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        guard let initial = initialClickLocation else { return }
+        
+        let current = event.locationInWindow
+        let deltaY = -(current.y - initial.y) // Invert the delta to match expected direction
+        
+        // Check if we've moved past the drag threshold
+        if !isDragging && abs(deltaY) > dragThreshold {
+            isDragging = true
+        }
+        
+        if isDragging {
+            onDragChange?(deltaY)
+        }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        defer {
+            initialClickLocation = nil
+            if isDragging {
+                isDragging = false
+                onDragEnd?()
+            }
+        }
+        
+        // Only trigger click if we haven't dragged and it's a single click
+        if !isDragging && event.clickCount == 1 {
             onClick?(event)
         }
     }
