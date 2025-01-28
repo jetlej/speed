@@ -1281,8 +1281,8 @@ struct TaskRow: View {
                 Color.white.opacity(0.05)
             }
             
-            // Content layer
             HStack(spacing: 8 * windowManager.zoomLevel) {
+                // Checkbox area
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(task.isCompleted ? .green : (isCheckboxHovered ? .green : .gray))
                     .font(.system(size: 16 * windowManager.zoomLevel))
@@ -1299,8 +1299,8 @@ struct TaskRow: View {
                             NSCursor.pop()
                         }
                     }
-                    .allowsHitTesting(true)
                 
+                // Main content area with drag handling
                 if isEditing {
                     CustomTextField(
                         text: $editedTitle,
@@ -1323,55 +1323,54 @@ struct TaskRow: View {
                         editedTitle = task.title
                     }
                 } else {
-                    HStack {
+                    ZStack {
+                        // Click and drag handler
+                        ClickView(
+                            onClick: { event in onSelect(event) },
+                            onDoubleClick: {
+                                editedTitle = task.title
+                                onStartEditing()
+                            },
+                            onDragChange: { deltaY in
+                                onDragChange?(task, deltaY)
+                            },
+                            onDragEnd: {
+                                onDragEnd?(task)
+                            }
+                        )
+                        
+                        // Task title
                         Text(task.title)
                             .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .regular, design: .default))
                             .strikethrough(task.isCompleted)
                             .foregroundColor(task.isCompleted ? .gray : (task.isFrog ? Color(hex: "8CFF00") : .white))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        if isHovered || task.isFrog {
-                            Button(action: {
-                                windowManager.toggleFrog(for: task)
-                            }) {
-                                Text("🐸")
-                                    .opacity(task.isFrog ? (isFrogHovered ? 0.7 : 1) : (isFrogHovered ? 0.5 : 0.1))
-                            }
-                            .buttonStyle(.plain)
-                            .frame(width: 20 * windowManager.zoomLevel)
-                            .onHover { hovering in
-                                isFrogHovered = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.push()
-                                } else {
-                                    NSCursor.pop()
-                                }
-                            }
-                            .allowsHitTesting(true)
+                            .allowsHitTesting(false)
+                    }
+                }
+                
+                // Frog button area
+                if isHovered || task.isFrog {
+                    Button(action: {
+                        windowManager.toggleFrog(for: task)
+                    }) {
+                        Text("🐸")
+                            .opacity(task.isFrog ? (isFrogHovered ? 0.7 : 1) : (isFrogHovered ? 0.5 : 0.1))
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: 20 * windowManager.zoomLevel)
+                    .onHover { hovering in
+                        isFrogHovered = hovering
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
                         }
                     }
                 }
             }
             .padding(.vertical, 6 * windowManager.zoomLevel)
             .padding(.horizontal, 14 * windowManager.zoomLevel)
-            
-            // Click and drag handler overlay
-            if !isEditing {
-                ClickView(
-                    onClick: { event in onSelect(event) },
-                    onDoubleClick: {
-                        editedTitle = task.title
-                        onStartEditing()
-                    },
-                    onDragChange: { deltaY in
-                        onDragChange?(task, deltaY)
-                    },
-                    onDragEnd: {
-                        onDragEnd?(task)
-                    }
-                )
-                .allowsHitTesting(true)
-            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 6 * windowManager.zoomLevel))
         .padding(.horizontal, 8 * windowManager.zoomLevel)
