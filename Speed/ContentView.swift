@@ -749,6 +749,7 @@ struct TaskListContent: View {
     @State private var dragOffset: CGFloat = 0
     @State private var taskPositions: [UUID: CGRect] = [:]
     @State private var previewIndex: Int?
+    @State private var isAnimatingDrop: Bool = false
     
     var body: some View {
         ScrollView {
@@ -767,6 +768,7 @@ struct TaskListContent: View {
                         onDragChange: { task, deltaY in
                             if draggingTask == nil {
                                 draggingTask = task
+                                isAnimatingDrop = false
                             }
                             
                             if draggingTask?.id == task.id {
@@ -794,6 +796,7 @@ struct TaskListContent: View {
                         onDragEnd: { task in
                             if let sourceIndex = activeTasks.firstIndex(where: { $0.id == task.id }),
                                let targetIndex = previewIndex {
+                                isAnimatingDrop = true
                                 // Move the task first
                                 onMove(IndexSet(integer: sourceIndex), targetIndex)
                             }
@@ -801,8 +804,15 @@ struct TaskListContent: View {
                             // Reset all states after the move
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 dragOffset = 0
-                                draggingTask = nil
-                                previewIndex = nil
+                            }
+                            
+                            // Reset other states without animation
+                            draggingTask = nil
+                            previewIndex = nil
+                            
+                            // Reset animation flag after a delay
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                isAnimatingDrop = false
                             }
                         },
                         windowManager: windowManager
@@ -854,7 +864,7 @@ struct TaskListContent: View {
                         return 0
                     }())
                     .zIndex(isBeingDragged ? 1 : 0)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: previewIndex)
+                    .animation(draggingTask != nil && !isAnimatingDrop ? .easeOut(duration: 0.2) : nil, value: previewIndex)
                 }
             }
             .padding(.vertical, 8)
