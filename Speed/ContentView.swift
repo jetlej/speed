@@ -1384,18 +1384,6 @@ class DoubleClickView: NSView {
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
-        let singleClickGesture = NSClickGestureRecognizer(target: self, action: #selector(handleClick(_:)))
-        singleClickGesture.numberOfClicksRequired = 1
-        self.addGestureRecognizer(singleClickGesture)
-        
-        let doubleClickGesture = NSClickGestureRecognizer(target: self, action: #selector(handleDoubleClick))
-        doubleClickGesture.numberOfClicksRequired = 2
-        self.addGestureRecognizer(doubleClickGesture)
-        
-        // Make single click wait for possible double click
-        singleClickGesture.delaysPrimaryMouseButtonEvents = true
-        doubleClickGesture.delaysPrimaryMouseButtonEvents = false
     }
     
     required init?(coder: NSCoder) {
@@ -1410,14 +1398,12 @@ class DoubleClickView: NSView {
         return true
     }
     
-    @objc private func handleClick(_ gesture: NSGestureRecognizer) {
-        if let event = NSApplication.shared.currentEvent {
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2 {
+            onDoubleClick()
+        } else if event.clickCount == 1 {
             onClick?(event)
         }
-    }
-    
-    @objc private func handleDoubleClick() {
-        onDoubleClick()
     }
 }
 
