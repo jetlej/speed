@@ -1123,6 +1123,9 @@ struct TaskListView: View {
                 } else if event.charactersIgnoringModifiers == "-" {  // Command + minus
                     windowManager.adjustZoom(increase: false)
                     return nil
+                } else if event.charactersIgnoringModifiers == "c" {  // Command + C
+                    copySelectedTasks()
+                    return nil
                 }
             }
             
@@ -1236,6 +1239,21 @@ struct TaskListView: View {
     
     private func moveTask(from source: IndexSet, to destination: Int) {
         windowManager.moveTask(from: source, to: destination)
+    }
+    
+    private func copySelectedTasks() {
+        if case .selected(let taskIds) = uiState {
+            // Get all selected tasks
+            let selectedTasks = windowManager.tasks.filter { taskIds.contains($0.id) }
+            
+            // Create text with each task title on a new line
+            let textToCopy = selectedTasks.map { $0.title }.joined(separator: "\n")
+            
+            // Copy to clipboard
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(textToCopy, forType: .string)
+        }
     }
 }
 
