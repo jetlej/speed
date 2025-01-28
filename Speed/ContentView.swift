@@ -829,13 +829,13 @@ struct TaskListContent: View {
                                         
                                         // Calculate how many positions to move based on drag distance
                                         let dragDistance = value.translation.height
-                                        let positionsToMove = Int(round(dragDistance / taskHeight))
+                                        let positionsToMove = taskHeight > 0 ? Int(round(dragDistance / taskHeight)) : 0
                                         
                                         // Calculate target index
                                         let targetIndex = max(0, min(activeTasks.count - 1, currentIndex + positionsToMove))
                                         
-                                        // Only update preview if we're actually moving
-                                        if targetIndex != currentIndex {
+                                        // Only update preview if we're actually moving and not a frog task
+                                        if targetIndex != currentIndex && (!task.isFrog || activeTasks[targetIndex].isFrog) {
                                             previewIndex = targetIndex
                                         } else {
                                             previewIndex = nil
@@ -869,6 +869,12 @@ struct TaskListContent: View {
             onTaskSelection(UUID(), nil)
         }
         .coordinateSpace(name: "scroll")
+        .onPreferenceChange(TaskPositionPreferenceKey.self) { positions in
+            // Update task positions when they change
+            for position in positions {
+                taskPositions[position.id] = position.frame
+            }
+        }
     }
 }
 

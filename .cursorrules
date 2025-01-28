@@ -1,10 +1,12 @@
 # Speed - Cursor Rules
 
 ## Overview
+
 Speed is a minimal macOS task management app with a unique "Speed Mode" feature for focused task completion.
 
 ## Meta Rules
-- This cursor.rules file must be updated whenever:
+
+- This .cursorrules file must be updated whenever:
   - New features are added
   - Existing features are modified
   - Requirements are changed
@@ -15,11 +17,12 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 ## Core Features
 
 ### Task Management
+
 - Add tasks by typing and pressing Enter
 - Add multiple tasks by pasting text:
   - Each line becomes a separate task
   - Common list prefixes are automatically removed:
-    - Markdown list markers (-, *, +)
+    - Markdown list markers (-, \*, +)
     - Checkbox markers ([ ], [x], etc.)
     - Numbered list markers (1., 2., etc.)
     - Things app format ([ ] MM/DD/YYYY)
@@ -38,6 +41,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Full undo/redo support for all task operations
 
 ### Task Selection and Movement
+
 - Single click: Selects a single task
 - Command+click: Toggles task selection (add/remove from selection)
 - Shift+click: Selects range of tasks between last selected and clicked task
@@ -56,6 +60,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Clicking input field clears selection
 
 ### Task Interactions
+
 - Entire task row is clickable for selection
 - Checkbox and frog buttons maintain separate click areas
 - Double click anywhere on row (except buttons) to edit
@@ -66,6 +71,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - 6px rounded corners on hover/selection states
 
 ### Frog Task Feature
+
 - Only one incomplete task can be marked as "frog" at a time
 - Frog tasks are pinned to the top of the list
 - Frog tasks are styled with:
@@ -89,6 +95,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 ### Window Modes
 
 #### List Mode (400x400)
+
 - Full task list view (showing only uncompleted tasks)
 - Black background with white text
 - Standard window controls
@@ -98,6 +105,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Window position and size persist between launches
 
 #### Speed Mode (300x50)
+
 - Triggered by bolt button or global Option + Command + Enter shortcut (disabled when no tasks exist)
 - Shows only the current (first uncompleted) task
 - Window properties:
@@ -119,6 +127,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 ### UI Elements
 
 #### Task Input
+
 - Single text field for task entry
 - White text on dark background
 - Submit via Enter key only
@@ -130,6 +139,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Returning to List Mode from Speed Mode
 
 #### Task List
+
 - Black background
 - White text for active tasks
 - Gray text for completed tasks
@@ -141,6 +151,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Only shows uncompleted tasks
 
 #### Speed Button
+
 - Full width
 - White background with black bolt icon
 - 14pt bold font
@@ -149,6 +160,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Cursor changes to pointing hand on hover
 
 #### Speed Mode Controls
+
 - Green checkmark button to complete current task
 - Red X button to exit Speed mode
 - Controls appear centered on hover
@@ -158,6 +170,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 ## Behavior Rules
 
 ### Window Management
+
 - Window position and size are preserved between launches
 - Window position is preserved in Speed Mode
 - Returns to center in List Mode if no saved position
@@ -166,6 +179,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - UI elements fade in after window animation completes (0.15s delay)
 
 ### Task Handling
+
 - Tasks are completed in order (first uncompleted task is current)
 - Completing the current task in Speed Mode shows the next task
 - Empty task submissions are ignored
@@ -184,20 +198,22 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Reordering tasks
 
 ### Visual States
+
 - Tasks show immediate visual feedback when completed
 - Window transitions use spring animation
 - Hover states use subtle white backgrounds
 - Selection states use slightly stronger white backgrounds
 - List supports drag-to-reorder visual feedback
-- Mode transitions smoothly fade between states 
+- Mode transitions smoothly fade between states
 
 # Cursor rules
+
 .gitignore
 .DS_Store
-*.xcuserstate
+_.xcuserstate
 xcuserdata/
 DerivedData/
-*.xcworkspace/xcuserdata/* 
+_.xcworkspace/xcuserdata/\*
 
 // Cursor Rules
 // Format: selector -> cursor
@@ -212,18 +228,20 @@ button -> pointer
 // Text input and selection
 input -> text
 textarea -> text
-[contenteditable] -> text 
+[contenteditable] -> text
 
 List Mode:
+
 - Minimum window size: 300x400
 - Resizable: Yes
 - Movable: Yes
 - Level: Normal
 
 Speed Mode:
+
 - Minimum window size: 222x35
 - Resizable: Yes
 - Movable: Yes
 - Level: Floating (always on top)
 - Rounded corners: 10px
-- Background: Black 
+- Background: Black
