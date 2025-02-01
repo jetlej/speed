@@ -5,12 +5,19 @@ on:
     tags:
       - "v*"
 
+# Add permissions block
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Fetch all history for tags
 
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
