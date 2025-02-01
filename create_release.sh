@@ -31,7 +31,8 @@ xcodebuild -exportArchive \
 # Create zip
 echo "Creating zip..."
 cd "$EXPORT_PATH"
-ditto -c -k --sequesterRsrc --keepParent "${APP_NAME}.app" "../../$ZIP_NAME"
+ditto -c -k --sequesterRsrc --keepParent "${APP_NAME}.app" "$ZIP_NAME"
+mv "$ZIP_NAME" "../.."  # Move zip to root directory
 cd ../..
 
 # Generate signature
