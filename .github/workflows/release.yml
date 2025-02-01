@@ -15,7 +15,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Fetch all history for tags
 
@@ -29,31 +29,28 @@ jobs:
           chmod +x create_release.sh
           ./create_release.sh
 
+      - name: Debug Directory Contents
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "\nDirectory contents:"
+          ls -la
+          echo "\nBuild directory contents:"
+          ls -la build/
+
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          files: Speed.app.zip
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Speed.app.zip
-          asset_name: Speed.app.zip
-          asset_content_type: application/zip
 
       - name: Update Appcast
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add appcast.xml
-          git commit -m "Update appcast.xml for ${{ github.ref }}"
+          git commit -m "Update appcast.xml for ${{ github.ref }}" || echo "No changes to commit"
           git push
