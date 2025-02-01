@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v*"
 
 jobs:
   build:
@@ -12,12 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install create-dmg
-        run: brew install create-dmg
-
-      - name: Install Sparkle
-        run: brew install sparkle
-
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -25,69 +19,8 @@ jobs:
 
       - name: Build App
         run: |
-          xcodebuild -scheme Speed -configuration Release clean build
-
-      - name: Create DMG
-        run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "Speed.app" -path "*/Release/*" -type d)
-          create-dmg \
-            --volname "Speed" \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --icon "Speed.app" 200 190 \
-            --hide-extension "Speed.app" \
-            --app-drop-link 600 185 \
-            "Speed.dmg" \
-            "$APP_PATH"
-
-      - name: Generate Ed25519 Key
-        run: |
-          if [ ! -f "ed25519_key" ]; then
-            /usr/local/Caskroom/sparkle/2.6.4/bin/generate_keys
-            echo "Generated new keys"
-          fi
-
-      - name: Sign DMG
-        run: |
-          /usr/local/Caskroom/sparkle/2.6.4/bin/sign_update Speed.dmg > signature.txt
-
-      - name: Update Appcast
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          DMG_SIZE=$(stat -f%z "Speed.dmg")
-          SIGNATURE=$(cat signature.txt)
-
-          cat > appcast.xml << EOF
-          <?xml version="1.0" encoding="utf-8"?>
-          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
-              <channel>
-                  <title>Speed App Updates</title>
-                  <description>Most recent changes with links to updates.</description>
-                  <language>en</language>
-                  <item>
-                      <title>Version $VERSION</title>
-                      <sparkle:version>$VERSION</sparkle:version>
-                      <description>
-                          <![CDATA[
-                              <h2>Version $VERSION</h2>
-                              <ul>
-                                  <li>See the <a href="https://github.com/jetlej/Speed/releases/tag/v$VERSION">release notes</a> for details.</li>
-                              </ul>
-                          ]]>
-                      </description>
-                      <pubDate>$(date -R)</pubDate>
-                      <enclosure
-                          url="https://github.com/jetlej/Speed/releases/download/v$VERSION/Speed.dmg"
-                          sparkle:version="$VERSION"
-                          sparkle:shortVersionString="$VERSION"
-                          length="$DMG_SIZE"
-                          type="application/octet-stream"
-                          sparkle:edSignature="$SIGNATURE" />
-                  </item>
-              </channel>
-          </rss>
-          EOF
+          chmod +x create_release.sh
+          ./create_release.sh
 
       - name: Create Release
         id: create_release
@@ -100,18 +33,20 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload DMG
+      - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Speed.dmg
-          asset_name: Speed.dmg
-          asset_content_type: application/octet-stream
+          asset_path: ./Speed.app.zip
+          asset_name: Speed.app.zip
+          asset_content_type: application/zip
 
-      - name: Upload Appcast
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "Update appcast.xml for version ${{ github.ref }}"
-          file_pattern: appcast.xml
+      - name: Update Appcast
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add appcast.xml
+          git commit -m "Update appcast.xml for ${{ github.ref }}"
+          git push
