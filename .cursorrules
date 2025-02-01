@@ -13,6 +13,47 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Behavior rules are adjusted
   - Visual states are altered
   - UI elements are modified
+  - Release processes are changed
+  - Version management is updated
+
+## Release Management
+
+### Version Control
+
+- Version numbers follow semantic versioning (MAJOR.MINOR.PATCH)
+- Version numbers must be consistent across:
+  - create_release.sh (VERSION variable)
+  - Xcode project settings
+  - project.pbxproj (MARKETING_VERSION)
+  - appcast.xml entries
+- Version increments:
+  - PATCH: Bug fixes and minor improvements
+  - MINOR: New features (backward compatible)
+  - MAJOR: Breaking changes or significant updates
+
+### Release Automation
+
+- Release process is automated via GitHub Actions
+- Version bumping is handled by bump_version.sh:
+  - -p or no flag: Patch version bump
+  - -m: Minor version bump
+  - -M: Major version bump
+  - -v X.Y.Z: Specific version
+- Release artifacts:
+  - Signed app bundle (.app)
+  - ZIP archive
+  - GitHub release
+  - Updated appcast.xml
+  - Sparkle signature
+
+### Release Requirements
+
+- All changes must be committed and pushed
+- Version numbers must be consistent
+- Release notes must be prepared
+- Previous version must support auto-update
+- Tests must pass
+- Documentation must be updated
 
 ## Core Features
 
@@ -209,11 +250,11 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 # Cursor rules
 
 .gitignore
-.DS_Store
-_.xcuserstate
+.DS*Store
+*.xcuserstate
 xcuserdata/
 DerivedData/
-_.xcworkspace/xcuserdata/\*
+\_.xcworkspace/xcuserdata/\*
 
 // Cursor Rules
 // Format: selector -> cursor
