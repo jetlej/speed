@@ -59,7 +59,15 @@ ditto -c -k --sequesterRsrc --keepParent "$APP_NAME.app" "$ZIP_NAME"
 echo "Zip created, contents of $EXPORT_PATH:"
 ls -la
 
-# Move zip to root directory
+# Notarize the app
+echo "Notarizing app..."
+xcrun notarytool submit "$ZIP_NAME" --keychain-profile "AC_PASSWORD" --wait
+
+# Staple the notarization ticket
+echo "Stapling notarization ticket..."
+xcrun stapler staple "$ZIP_NAME"
+ditto -c -k --sequesterRsrc --keepParent "$APP_NAME.app" "$ZIP_NAME"
+
 echo "Moving zip to root directory..."
 mv "$ZIP_NAME" ../..
 cd ../..
