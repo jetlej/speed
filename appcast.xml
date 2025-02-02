@@ -2,9 +2,8 @@
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>Speed Updates</title>
-        <item>n            <title>Version 1.0.0</title>n            <pubDate>Sat, 01 Feb 2025 23:47:33 +0000</pubDate>n            <sparkle:version>1.0.0</sparkle:version>n            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>n            <description><![CDATA[n                <h2>Version 1.0.0</h2>n                <ul>n                    <li>Updates and improvements</li>n                </ul>n            ]]></description>n            <link>https://github.com/jetlej/Speed/releases/tag/v1.0.0</link>n            <enclosuren                url="https://github.com/jetlej/Speed/releases/download/v1.0.0/Speed.app.zip"n                sparkle:version="1.0.0"n                sparkle:shortVersionString="1.0.0"n                length="0"n                type="application/octet-stream"n                sparkle:edSignature="SIGNATURE_PLACEHOLDER"n            />n        </item>
         <item>
-            <title>Version 1.0</title>
+            <title>Version 1.0.0</title>
             <pubDate>Thu, 1 Feb 2024 12:00:00 +0000</pubDate>
             <sparkle:version>1.0</sparkle:version>
             <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
