@@ -1209,11 +1209,22 @@ struct TaskListView: View {
                             return nil
                         }
                     }
-                } else if isInputFocused {
-                    return event
                 } else if case .selected(let taskIds) = uiState {
-                    if let currentTaskId = taskIds.first {
-                        selectPreviousTask(before: currentTaskId)
+                    if let currentTaskId = taskIds.first,
+                       let currentIndex = windowManager.activeTasks.firstIndex(where: { $0.id == currentTaskId }) {
+                        if currentIndex == 0 {
+                            // If we're on the first task, focus the input field
+                            isInputFocused = true
+                            return nil
+                        } else {
+                            selectPreviousTask(before: currentTaskId)
+                        }
+                    }
+                    return nil
+                } else if isInputFocused && !windowManager.activeTasks.isEmpty {
+                    // If input is focused and there are tasks, allow selecting the last task
+                    if let lastTask = windowManager.activeTasks.last {
+                        handleTaskSelection(taskId: lastTask.id, shouldUnfocusInput: false)
                     }
                     return nil
                 }
