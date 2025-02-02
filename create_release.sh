@@ -13,8 +13,15 @@ EXPORT_PATH="./build/${APP_NAME}-${VERSION}"
 ZIP_NAME="${APP_NAME}.app.zip"
 
 # Clean build directory
-rm -rf build
-mkdir -p build
+echo "Cleaning build directory..."
+rm -rf ./build
+mkdir -p ./build
+
+# Check for exportOptions.plist
+if [ ! -f "exportOptions.plist" ]; then
+    echo "Error: exportOptions.plist not found"
+    exit 1
+fi
 
 # Build archive
 echo "Building archive..."
@@ -22,7 +29,9 @@ xcodebuild archive \
     -scheme "$SCHEME" \
     -configuration "$CONFIGURATION" \
     -archivePath "$ARCHIVE_PATH" \
-    CODE_SIGN_IDENTITY="Sign to Run Locally"
+    CODE_SIGN_STYLE=Automatic \
+    DEVELOPMENT_TEAM=34HCA7L7PV \
+    CODE_SIGN_IDENTITY="Apple Development"
 
 echo "Archive contents:"
 ls -la "$ARCHIVE_PATH"
@@ -32,7 +41,8 @@ echo "Exporting archive..."
 xcodebuild -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
-    -exportOptionsPlist exportOptions.plist
+    -exportOptionsPlist exportOptions.plist \
+    DEVELOPMENT_TEAM=34HCA7L7PV
 
 echo "Export directory contents:"
 ls -la "$EXPORT_PATH"
@@ -40,32 +50,45 @@ ls -la "$EXPORT_PATH"
 # Create zip
 echo "Creating zip..."
 cd "$EXPORT_PATH"
-if [ ! -d "${APP_NAME}.app" ]; then
-    echo "Error: ${APP_NAME}.app directory not found in $EXPORT_PATH"
+if [ ! -d "$APP_NAME.app" ]; then
+    echo "Error: $APP_NAME.app not found in export directory"
     exit 1
 fi
+ditto -c -k --sequesterRsrc --keepParent "$APP_NAME.app" "$ZIP_NAME"
 
-ditto -c -k --sequesterRsrc --keepParent "${APP_NAME}.app" "$ZIP_NAME"
 echo "Zip created, contents of $EXPORT_PATH:"
 ls -la
 
+# Move zip to root directory
 echo "Moving zip to root directory..."
-mv "$ZIP_NAME" "../.."
+mv "$ZIP_NAME" ../..
 cd ../..
 
 echo "Root directory contents:"
 ls -la
 
-# Generate signature
+# Generate Sparkle signature
 echo "Generating Sparkle signature..."
-if [ ! -f "./bin/sign_update" ]; then
-    echo "Error: sign_update not found"
+if [ ! -f "./scripts/sign_update" ]; then
+    echo "Error: sign_update tool not found"
     exit 1
 fi
 
-./bin/sign_update "$ZIP_NAME"
+# Run the sign_update tool and capture its output
+SIGNATURE_OUTPUT=$(./scripts/sign_update "$ZIP_NAME")
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to generate signature"
+    exit 1
+fi
 
-echo "Done! Release artifacts created:"
+# Extract and save the signature and public key
+echo "$SIGNATURE_OUTPUT" > signature.txt
+echo "Signature generated and saved to signature.txt"
+
+echo "Release artifacts created:"
 echo "- $ZIP_NAME"
-ls -la "$ZIP_NAME"
-echo "Please upload these to GitHub releases" 
+echo "- signature.txt"
+echo
+echo "Next steps:"
+echo "1. Upload $ZIP_NAME to GitHub releases"
+echo "2. Update appcast.xml with the new version, download URL, and signature" 
