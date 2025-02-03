@@ -5,7 +5,7 @@ set -x  # Print each command before executing
 
 # Configuration
 APP_NAME="Speed"
-VERSION="1.0.0"
+VERSION="1.0.1"
 SCHEME="Speed"
 CONFIGURATION="Release"
 ARCHIVE_PATH="./build/${APP_NAME}.xcarchive"
