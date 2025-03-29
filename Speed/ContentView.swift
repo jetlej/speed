@@ -631,6 +631,7 @@ struct CustomTextField: NSViewRepresentable {
                 parent.onCancel()
                 return true
             }
+            // Let the system handle all other commands (including copy/paste)
             return false
         }
     }
@@ -649,6 +650,8 @@ struct CustomTextField: NSViewRepresentable {
         textField.focusRingType = .none
         textField.drawsBackground = false
         textField.isSelectable = true
+        textField.isEditable = true
+        
         textField.placeholderString = "New task"
         textField.placeholderAttributedString = NSAttributedString(
             string: "New task",
@@ -1125,6 +1128,11 @@ struct TaskListView: View {
     
     private func setupKeyboardMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Skip any keyboard event handling completely when in editing mode
+            if case .editing = uiState {
+                return event
+            }
+            
             // Handle zoom shortcuts
             if event.modifierFlags.contains(.command) {
                 if event.charactersIgnoringModifiers == "=" {  // Command + equals/plus
@@ -1365,13 +1373,26 @@ struct TaskRow: View {
                             .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .regular, design: .default))
                             .strikethrough(task.isCompleted)
                             .foregroundColor(task.isCompleted ? .gray : (task.isFrog ? Color(hex: "8CFF00") : .white))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .allowsHitTesting(false)
                     }
                 }
                 
-                // Frog button area
+                // Empty space with fixed width for frog button spacing
                 if isHovered || task.isFrog {
+                    Spacer()
+                        .frame(width: 20 * windowManager.zoomLevel)
+                }
+            }
+            .padding(.vertical, 6 * windowManager.zoomLevel)
+            .padding(.horizontal, 14 * windowManager.zoomLevel)
+            
+            // Frog button as overlay in absolute position
+            if isHovered || task.isFrog {
+                HStack {
+                    Spacer()
                     Button(action: {
                         windowManager.toggleFrog(for: task)
                     }) {
@@ -1388,10 +1409,10 @@ struct TaskRow: View {
                             NSCursor.pop()
                         }
                     }
+                    .padding(.trailing, 14 * windowManager.zoomLevel)
                 }
+                .padding(.vertical, 6 * windowManager.zoomLevel)
             }
-            .padding(.vertical, 6 * windowManager.zoomLevel)
-            .padding(.horizontal, 14 * windowManager.zoomLevel)
         }
         .clipShape(RoundedRectangle(cornerRadius: 6 * windowManager.zoomLevel))
         .padding(.horizontal, 8 * windowManager.zoomLevel)
@@ -1523,6 +1544,7 @@ struct SpeedModeView: View {
                         Text((task.isFrog ? "🐸 " : "") + task.title)
                             .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .medium, design: .default))
                             .lineLimit(1)
+                            .truncationMode(.tail)
                             .foregroundColor(task.isFrog ? Color(hex: "8CFF00") : .white)
                         
                         // Buttons as overlay
@@ -1575,6 +1597,7 @@ struct SpeedModeView: View {
                     Text((task.isFrog ? "🐸 " : "") + task.title)
                         .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .medium, design: .default))
                         .lineLimit(1)
+                        .truncationMode(.tail)
                         .foregroundColor(task.isFrog ? Color(hex: "8CFF00") : .white)
                 }
             }
