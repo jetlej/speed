@@ -569,56 +569,75 @@ class WindowManager: ObservableObject {
             return
         }
         
-        // Create a purely borderless window - no title bar, no reserved space
-        let window = NSWindow(
+        // Create a clean panel with minimal style
+        let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 60),
-            styleMask: [.borderless],
+            styleMask: [.titled, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         
-        // Configure window appearance
-        window.backgroundColor = .black
-        window.hasShadow = true
-        window.level = .floating
-        window.isMovableByWindowBackground = true
-        window.isMovable = true
+        // Configure panel appearance
+        panel.backgroundColor = .black
+        panel.hasShadow = true
+        panel.level = .floating
+        panel.isMovableByWindowBackground = true
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
         
-        // Critical window properties
-        window.contentView?.wantsLayer = true
-        window.contentView?.layer?.cornerRadius = 10
-        window.contentView?.layer?.masksToBounds = true
-        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
-        window.isReleasedWhenClosed = false
+        // Create a zero-height toolbar
+        let toolbar = NSToolbar(identifier: "EmptyToolbar")
+        toolbar.showsBaselineSeparator = false
+        toolbar.displayMode = .iconOnly
+        toolbar.sizeMode = .small
+        panel.toolbar = toolbar
         
-        // Center on screen
+        // Force zero-height titlebar through additional settings
+        if let customTitlebar = panel.standardWindowButton(.closeButton)?.superview?.superview {
+            customTitlebar.isHidden = true
+        }
+        
+        // Set up appearance
+        panel.contentView?.wantsLayer = true
+        panel.contentView?.layer?.cornerRadius = 10
+        panel.contentView?.layer?.masksToBounds = true
+        
+        // Hide window buttons
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
+        
+        // Panel behavior
+        panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+        panel.isReleasedWhenClosed = false
+        
+        // Center the panel on screen
         if let mainScreen = NSScreen.main {
             let screenFrame = mainScreen.visibleFrame
-            let windowFrame = window.frame
+            let windowFrame = panel.frame
             let x = screenFrame.midX - windowFrame.width / 2
             let y = screenFrame.midY - windowFrame.height / 2
-            window.setFrameOrigin(NSPoint(x: x, y: y))
+            panel.setFrameOrigin(NSPoint(x: x, y: y))
         }
         
         // Create and set the SwiftUI view
         let quickAddView = QuickAddView().environmentObject(self)
         let hostingController = NSHostingController(rootView: quickAddView)
         hostingController.view.frame = NSRect(x: 0, y: 0, width: 400, height: 60)
-        window.contentView = hostingController.view
+        panel.contentView = hostingController.view
         
-        // Store reference
-        quickAddWindow = window
+        // Store reference to panel
+        quickAddWindow = panel
         isQuickAddVisible = true
         
-        // Show window and activate
+        // Show window and make it key
         NSApplication.shared.activate(ignoringOtherApps: true)
-        window.orderFrontRegardless()
-        window.makeKeyAndOrderFront(nil)
+        panel.makeKeyAndOrderFront(nil)
         
-        // Focus the text field
+        // Focus the text field after a slight delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let textField = window.contentView?.firstTextField() {
-                window.makeFirstResponder(textField)
+            if let textField = panel.contentView?.firstTextField() {
+                panel.makeFirstResponder(textField)
             }
         }
     }
@@ -784,149 +803,6 @@ struct CustomTextField: NSViewRepresentable {
                 }
                 context.coordinator.hasInitialFocus = true
             }
-        }
-    }
-}
-
-// Text field specifically for the Quick Add modal
-struct FocusableTextField: NSViewRepresentable {
-    @Binding var text: String
-    var onSubmit: () -> Void
-    var onCancel: () -> Void
-    
-    // Custom container to precisely position the text field
-    class CenteredTextFieldContainer: NSView {
-        let textField = AutoFocusTextField()
-        var eventMonitor: Any?
-        
-        override init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            
-            // Add the text field as a subview
-            addSubview(textField)
-            
-            // Set up the text field's frame
-            textField.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([
-                textField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
-                textField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
-                textField.centerYAnchor.constraint(equalTo: centerYAnchor),
-                textField.heightAnchor.constraint(equalToConstant: 40)
-            ])
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func hitTest(_ point: NSPoint) -> NSView? {
-            // Make sure we don't interfere with event handling
-            let result = super.hitTest(point)
-            return result == self ? textField : result
-        }
-        
-        deinit {
-            if let monitor = eventMonitor {
-                NSEvent.removeMonitor(monitor)
-            }
-        }
-    }
-    
-    class AutoFocusTextField: NSTextField {
-        // Disable field editor to avoid remote view controller issues
-        override var allowsVibrancy: Bool { return false }
-        
-        // Ensure this field accepts first responder status
-        override var acceptsFirstResponder: Bool { return true }
-    }
-    
-    func makeNSView(context: Context) -> CenteredTextFieldContainer {
-        let container = CenteredTextFieldContainer(frame: .zero)
-        let textField = container.textField
-        
-        textField.delegate = context.coordinator
-        textField.stringValue = text
-        
-        // Appearance
-        textField.font = .systemFont(ofSize: 24, weight: .medium)
-        textField.textColor = .white
-        textField.backgroundColor = .black
-        textField.drawsBackground = false
-        textField.isBordered = false
-        textField.focusRingType = .none
-        
-        // Placeholder
-        textField.placeholderString = "Add a new task..."
-        textField.placeholderAttributedString = NSAttributedString(
-            string: "Add a new task...",
-            attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.3),
-                .font: NSFont.systemFont(ofSize: 24, weight: .medium)
-            ]
-        )
-        
-        // Behavior settings
-        textField.isEditable = true
-        textField.isSelectable = true
-        textField.refusesFirstResponder = false
-        
-        // Set up keyboard event monitoring for delete keys
-        container.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 51 || event.keyCode == 117 { // Delete or Forward Delete
-                return event // Allow delete keys
-            }
-            return event
-        }
-        
-        return container
-    }
-    
-    func updateNSView(_ nsView: CenteredTextFieldContainer, context: Context) {
-        // Only update if changed to avoid cursor issues
-        if nsView.textField.stringValue != text {
-            nsView.textField.stringValue = text
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, NSTextFieldDelegate {
-        var parent: FocusableTextField
-        var isSubmitting = false
-        
-        init(_ parent: FocusableTextField) {
-            self.parent = parent
-            super.init()
-        }
-        
-        func controlTextDidChange(_ obj: Notification) {
-            guard let textField = obj.object as? NSTextField else { return }
-            parent.text = textField.stringValue
-        }
-        
-        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                if !isSubmitting {
-                    isSubmitting = true
-                    DispatchQueue.main.async { [weak self] in
-                        self?.parent.onSubmit()
-                        self?.isSubmitting = false
-                    }
-                }
-                return true
-            } else if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-                if !isSubmitting {
-                    isSubmitting = true
-                    DispatchQueue.main.async { [weak self] in
-                        self?.parent.onCancel()
-                        self?.isSubmitting = false
-                    }
-                }
-                return true
-            }
-            return false
         }
     }
 }
@@ -1986,7 +1862,7 @@ struct QuickAddView: View {
     
     var body: some View {
         ZStack {
-            // Background
+            // Draggable background
             Rectangle()
                 .fill(Color.black)
                 .cornerRadius(10)
@@ -1995,13 +1871,17 @@ struct QuickAddView: View {
             // Make the entire view draggable
             DraggableView()
             
-            // Our perfectly centered text field container
-            FocusableTextField(
-                text: $taskText,
-                onSubmit: { submitTask() },
-                onCancel: { windowManager.closeQuickAddModal() }
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Input field
+            VStack(spacing: 0) {
+                FocusableTextField(
+                    text: $taskText,
+                    onSubmit: { submitTask() },
+                    onCancel: { windowManager.closeQuickAddModal() }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 10)
+            }
+            .frame(width: 400, height: 60)
         }
         .frame(width: 400, height: 60)
         .onAppear {
@@ -2041,6 +1921,126 @@ struct QuickAddView: View {
             // Just close the modal if empty
             windowManager.closeQuickAddModal()
             isSubmitting = false
+        }
+    }
+}
+
+// Text field specifically for the Quick Add modal
+struct FocusableTextField: NSViewRepresentable {
+    @Binding var text: String
+    var onSubmit: () -> Void
+    var onCancel: () -> Void
+    
+    class AutoFocusTextField: NSTextField {
+        // Disable field editor to avoid remote view controller issues
+        override var allowsVibrancy: Bool { return false }
+        
+        // Ensure this field accepts first responder status
+        override var acceptsFirstResponder: Bool { return true }
+        
+        // Keep track of event monitor for cleanup
+        var eventMonitor: Any?
+        
+        deinit {
+            if let monitor = eventMonitor {
+                NSEvent.removeMonitor(monitor)
+            }
+        }
+    }
+    
+    func makeNSView(context: Context) -> NSTextField {
+        let textField = AutoFocusTextField()
+        textField.delegate = context.coordinator
+        textField.stringValue = text
+        
+        // Appearance
+        textField.font = .systemFont(ofSize: 24, weight: .medium)
+        textField.textColor = .white
+        textField.backgroundColor = .black
+        textField.drawsBackground = false
+        textField.isBordered = false
+        textField.focusRingType = .none
+        
+        // Center text vertically by adjusting the frame
+        textField.cell?.titleRect(forBounds: NSRect(x: 0, y: 0, width: 380, height: 60))
+        
+        // Placeholder
+        textField.placeholderString = "Add a new task..."
+        textField.placeholderAttributedString = NSAttributedString(
+            string: "Add a new task...",
+            attributes: [
+                .foregroundColor: NSColor.white.withAlphaComponent(0.3),
+                .font: NSFont.systemFont(ofSize: 24, weight: .medium)
+            ]
+        )
+        
+        // Improve behavior
+        textField.refusesFirstResponder = false
+        textField.isEditable = true
+        textField.isSelectable = true
+        
+        // Clean up any existing event monitor and add a new one for key events
+        if let existingMonitor = textField.eventMonitor {
+            NSEvent.removeMonitor(existingMonitor)
+        }
+        
+        // Create a local key event monitor that catches delete keys
+        textField.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 51 || event.keyCode == 117 { // Delete or Forward Delete
+                return event // Allow delete keys to work normally
+            }
+            return event
+        }
+        
+        return textField
+    }
+    
+    func updateNSView(_ nsView: NSTextField, context: Context) {
+        // Only update if text changed to avoid losing cursor position
+        if nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        var parent: FocusableTextField
+        var isSubmitting = false
+        
+        init(_ parent: FocusableTextField) {
+            self.parent = parent
+            super.init()
+        }
+        
+        func controlTextDidChange(_ obj: Notification) {
+            guard let textField = obj.object as? NSTextField else { return }
+            parent.text = textField.stringValue
+        }
+        
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                if !isSubmitting {
+                    isSubmitting = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.parent.onSubmit()
+                        self?.isSubmitting = false
+                    }
+                }
+                return true
+            } else if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                if !isSubmitting {
+                    isSubmitting = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.parent.onCancel()
+                        self?.isSubmitting = false
+                    }
+                }
+                return true
+            }
+            return false
         }
     }
 }
