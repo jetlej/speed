@@ -64,6 +64,13 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 
 ### Task Management
 
+- Task Object Structure:
+  - `id`: UUID (Unique identifier)
+  - `title`: String (Task description)
+  - `isCompleted`: Bool (Completion status)
+  - `completedAt`: Date? (Timestamp of completion, optional)
+  - `isFrog`: Bool (Whether the task is the current "frog", default false)
+  - `priority`: Int (Task priority from 1 to 5, default 1)
 - Add tasks by typing and pressing Enter
 - Add multiple tasks by pasting text:
   - Each line becomes a separate task
@@ -85,17 +92,27 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Completed tasks are hidden but preserved in storage
 - Tasks persist between app launches and window reopens
 - Full undo/redo support for all task operations
+- Tasks have a priority field (integer 1-5, default 1)
 
 ### Quick Add Modal
 
 - Triggered by global Command + Option + N shortcut from any app
 - Command K-style modal appears above all other apps
-- Black background with 10px rounded corners
-- Fixed size of 400x60 pixels
+- Dark gray blurred background
+- 10px rounded corners
+- Fixed size of 400x100
 - Centered on screen
-- White text on black background
+- White text on dark background
 - Text field automatically focused for immediate typing
-- Submit task by pressing Enter
+- Priority selection:
+  - Below text field, a row of 5 buttons (1-5) appears
+  - Buttons are square, full-width, in a container with slight background and rounded corners
+  - Pressing Tab from text field moves focus to priority buttons
+  - Pressing Shift+Tab from priority buttons moves focus back to text field
+  - Left/Right arrow keys select priority when buttons are focused
+  - Clicking a priority button selects it
+  - Default priority is 1
+- Submit task by pressing Enter (includes selected priority)
 - Auto-close on submission
 - Press Escape to cancel and close
 - Draggable from anywhere in the window
@@ -230,13 +247,14 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 
 #### Quick Add Modal
 
-- Fixed size: 400x60
-- Black background
+- Fixed size: 400x100
+- Dark gray blurred background
 - White text in text field
 - 10px rounded corners
-- Auto-focused text field with 16pt medium font
+- Auto-focused text field with 24pt medium font
 - No window controls
 - Draggable from anywhere
+- Priority buttons (1-5) displayed below text field
 
 ## Behavior Rules
 
@@ -250,6 +268,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - UI elements fade in after window animation completes (0.15s delay)
 - Quick Add modal appears centered by default
 - Quick Add modal floats above all other windows
+- Quick Add modal does not activate the main app window
 
 ### Task Handling
 
@@ -269,6 +288,7 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Editing task text
   - Deleting tasks
   - Reordering tasks
+  - Changing priority via Quick Add
 
 ### Global Shortcuts
 
