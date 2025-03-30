@@ -572,7 +572,7 @@ class WindowManager: ObservableObject {
 
         // Create a completely detached accessory window
         let panel = FocusableBorderlessPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 160), // Initial height, will be resized
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 140), // Initial height, will be resized
             styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -609,7 +609,7 @@ class WindowManager: ObservableObject {
         let hostedView = hostingController.view
         hostedView.translatesAutoresizingMaskIntoConstraints = false // Use constraints
         hostedView.wantsLayer = true
-        hostedView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostedView.layer?.backgroundColor = NSColor(white: 0.0, alpha: 0.5).cgColor // Semi-transparent black
         hostedView.layer?.masksToBounds = true
         
         // Add SwiftUI view to the blur view
@@ -2009,7 +2009,7 @@ struct QuickAddView: View {
                         focusDummyElement()
                     }
                 )
-                .frame(maxWidth: .infinity, minHeight: 80)
+                .frame(maxWidth: .infinity, minHeight: 60)
                 .padding(.horizontal, 10)
                 // Removed all vertical padding
                 
