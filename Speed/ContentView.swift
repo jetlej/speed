@@ -40,9 +40,10 @@ struct Task: Identifiable, Equatable, Codable {
     var isCompleted: Bool
     var completedAt: Date?
     var isFrog: Bool = false
+    var priority: Int = 1 // Default priority (1-5 scale)
     
     enum CodingKeys: String, CodingKey {
-        case id, title, isCompleted, completedAt, isFrog
+        case id, title, isCompleted, completedAt, isFrog, priority
     }
 }
 
@@ -571,32 +572,61 @@ class WindowManager: ObservableObject {
 
         // Create a completely detached accessory window
         let panel = FocusableBorderlessPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 60),
-            styleMask: [.borderless, .nonactivatingPanel],
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 160), // Initial height, will be resized
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
 
-        // Critical setting: make it a non-activating panel
+        // Basic Panel Setup
         panel.becomesKeyOnlyIfNeeded = false
-        panel.backgroundColor = .clear
         panel.isOpaque = false
-        panel.hasShadow = true
-        panel.level = .modalPanel  // Higher level to appear above other windows
+        panel.backgroundColor = .clear
+        panel.hasShadow = false // Remove the panel's shadow
+        panel.level = .modalPanel
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
-        
-        // Special flags to really detach from the app's window hierarchy
-        panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary, .ignoresCycle]
+        panel.appearance = NSAppearance(named: .darkAqua) // Ensure dark appearance
+        panel.collectionBehavior = [.moveToActiveSpace, .ignoresCycle] // Removed .fullSizeAuxiliary
         panel.isReleasedWhenClosed = false
         panel.isFloatingPanel = true
+
+        // Setup Blur View (content view)
+        let blurView = NSVisualEffectView()
+        blurView.blendingMode = .behindWindow
+        blurView.state = .active
+        blurView.material = .hudWindow
+        blurView.wantsLayer = true
+        blurView.layer?.cornerRadius = 10 // Round corners of the blur view itself
+        blurView.layer?.masksToBounds = true
+        blurView.layer?.borderWidth = 1 // Add a 1pt border
+        blurView.layer?.borderColor = NSColor(white: 1.0, alpha: 0.2).cgColor // Subtle white border
+        panel.contentView = blurView // Set the blur view AS the content view
+
+        // Setup SwiftUI Hosting View
+        let quickAddView = QuickAddView().environmentObject(self)
+        let hostingController = NSHostingController(rootView: quickAddView)
+        let hostedView = hostingController.view
+        hostedView.translatesAutoresizingMaskIntoConstraints = false // Use constraints
+        hostedView.wantsLayer = true
+        hostedView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostedView.layer?.masksToBounds = true
         
-        // Ensure content view has rounded corners
-        panel.contentView?.wantsLayer = true
-        panel.contentView?.layer?.cornerRadius = 10
-        panel.contentView?.layer?.masksToBounds = true
-        
-        // Center the panel on screen
+        // Add SwiftUI view to the blur view
+        blurView.addSubview(hostedView)
+
+        // Set constraints for the SwiftUI view to fill the blur view
+        NSLayoutConstraint.activate([
+            hostedView.topAnchor.constraint(equalTo: blurView.topAnchor),
+            hostedView.bottomAnchor.constraint(equalTo: blurView.bottomAnchor),
+            hostedView.leadingAnchor.constraint(equalTo: blurView.leadingAnchor),
+            hostedView.trailingAnchor.constraint(equalTo: blurView.trailingAnchor)
+        ])
+
+        // Adjust window frame to fit SwiftUI content AFTER setting it up
+        panel.setContentSize(hostingController.view.fittingSize)
+
+        // Center the panel on screen AFTER setting size
         if let mainScreen = NSScreen.main {
             let screenFrame = mainScreen.visibleFrame
             let windowFrame = panel.frame
@@ -605,26 +635,16 @@ class WindowManager: ObservableObject {
             panel.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        // Create and set the SwiftUI view
-        let quickAddView = QuickAddView().environmentObject(self)
-        let hostingController = NSHostingController(rootView: quickAddView)
-        hostingController.view.frame = NSRect(x: 0, y: 0, width: 400, height: 60)
-        panel.contentView = hostingController.view
-
-        // Store reference to panel
+        // Store reference and display
         quickAddWindow = panel
         isQuickAddVisible = true
-
-        // Simply order it front without making it key
         panel.orderFrontRegardless()
         
-        // Now make it key after a delay so it doesn't bring the app forward
+        // Focus management
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             panel.makeKey()
-            
-            // Wait until it's visible and try to focus the text field
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                if let textField = panel.contentView?.firstTextField() {
+                if let textField = blurView.firstTextField() {
                     panel.makeFirstResponder(textField)
                 }
             }
@@ -649,6 +669,18 @@ class WindowManager: ObservableObject {
             }
         }
     }
+
+    func addTaskWithPriority(_ title: String, priority: Int) -> UUID {
+        let oldTasks = tasks
+        let newTask = Task(title: title, isCompleted: false, priority: priority)
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            tasks.append(newTask)
+        }
+        saveTasks()
+        
+        registerUndoRedoOperation(oldTasks: oldTasks, newTasks: tasks, actionName: "Add Task")
+        return newTask.id
+    }
 }
 
 // Custom NSPanel subclass to allow becoming key even when borderless
@@ -671,6 +703,26 @@ class FocusableBorderlessPanel: NSPanel {
     override func makeKeyAndOrderFront(_ sender: Any?) {
         // Just order front without the makeKey part
         self.orderFront(sender)
+    }
+    
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        
+        // Make sure the panel has rounded corners
+        self.styleMask = [.borderless, .nonactivatingPanel]
+        self.isOpaque = false
+        self.backgroundColor = .clear
+        
+        // Ensure the window itself has rounded corners
+        self.contentView?.wantsLayer = true
+        self.contentView?.layer?.cornerRadius = 10
+        self.contentView?.layer?.masksToBounds = true
+        
+        if let windowView = self.contentView?.superview {
+            windowView.wantsLayer = true
+            windowView.layer?.cornerRadius = 10
+            windowView.layer?.masksToBounds = true
+        }
     }
 }
 
@@ -1847,42 +1899,203 @@ struct HoverView: NSViewRepresentable {
     }
 }
 
+// Priority selection button with updated styling
+struct PriorityButton: View {
+    let number: Int
+    let isSelected: Bool
+    let hasFocus: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text("\(number)")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(isSelected ? .white : .gray)
+                .frame(maxWidth: .infinity)
+                .frame(height: 34) // Separate height modifier
+                .background(isSelected ? Color.white.opacity(0.15) : Color.clear)
+                .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// Helper shape to create specific rounded corners
+struct RoundedCornerShape: Shape {
+    let bottomLeft: CGFloat
+    let bottomRight: CGFloat
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        // Start at top left
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        
+        // Top edge
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        
+        // Right edge and bottom right corner
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomRight))
+        if bottomRight > 0 {
+            path.addArc(
+                center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
+                radius: bottomRight,
+                startAngle: Angle(degrees: 0),
+                endAngle: Angle(degrees: 90),
+                clockwise: false
+            )
+        } else {
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        }
+        
+        // Bottom edge
+        path.addLine(to: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY))
+        
+        // Bottom left corner and left edge
+        if bottomLeft > 0 {
+            path.addArc(
+                center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
+                radius: bottomLeft,
+                startAngle: Angle(degrees: 90),
+                endAngle: Angle(degrees: 180),
+                clockwise: false
+            )
+        } else {
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+        
+        // Close the path
+        path.closeSubpath()
+        
+        return path
+    }
+}
+
+// Define KeyDirection enum outside of FocusableTextField
+enum KeyDirection {
+    case left, right, up, down
+}
+
 // QuickAddView - Command K-style modal for quick task entry
 struct QuickAddView: View {
     @EnvironmentObject var windowManager: WindowManager
     @State private var taskText: String = ""
     @State private var isSubmitting = false
+    @State private var selectedPriority: Int = 1 // Default priority changed to 1
+    @State private var focusState: FocusState = .textField
+    
+    enum FocusState {
+        case textField
+        case priorityButtons
+    }
+    
+    // Reference to the dummy view
+    private let dummyViewId = "quickAddDummy"
     
     var body: some View {
         ZStack {
-            // Draggable background with border
-            Rectangle()
-                .fill(Color.black)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
-                .allowsHitTesting(false)
-            
             // Make the entire view draggable
             DraggableView()
             
-            // Input field
-            VStack(spacing: 0) {
+            // Input field and priority buttons
+            VStack(spacing: 0) { // Ensure spacing is zero
+                // Text input field
                 FocusableTextField(
                     text: $taskText,
                     onSubmit: { submitTask() },
-                    onCancel: { windowManager.closeQuickAddModal() }
+                    onCancel: { windowManager.closeQuickAddModal() },
+                    onTab: {
+                        focusState = .priorityButtons
+                        focusDummyElement()
+                    }
                 )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity, minHeight: 80)
                 .padding(.horizontal, 10)
+                // Removed all vertical padding
+                
+                // Invisible dummy view for focus
+                DummyView()
+                    .id(dummyViewId)
+                    .frame(width: 0, height: 0)
+                    .accessibility(identifier: dummyViewId)
+                
+                // Priority buttons container
+                VStack {
+                    HStack(spacing: 0) {
+                        ForEach(1...5, id: \.self) { priority in
+                            PriorityButton(
+                                number: priority,
+                                isSelected: selectedPriority == priority,
+                                hasFocus: focusState == .priorityButtons,
+                                action: { selectedPriority = priority }
+                            )
+                        }
+                    }
+                    .padding(6) // Keep internal padding for buttons
+                }
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(12)
+                // Apply padding only horizontally and at the bottom
+                .padding(.horizontal, 10)
+                .padding(.bottom, 10)
             }
-            .frame(width: 400, height: 60)
+            .frame(width: 400)
         }
-        .frame(width: 400, height: 60)
+        .frame(width: 400)
         .onAppear {
-            // Minimal work in onAppear - we're handling focus in WindowManager
+            selectedPriority = 1
+            focusState = .textField
+        }
+        .onKeyPress(.leftArrow) {
+            if focusState == .priorityButtons && selectedPriority > 1 {
+                selectedPriority -= 1
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(.rightArrow) {
+            if focusState == .priorityButtons && selectedPriority < 5 {
+                selectedPriority += 1
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(.tab) {
+            // Tab cycles between text field and priority buttons
+            if focusState == .priorityButtons {
+                focusState = .textField
+                focusTextField()
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(.return) {
+            DispatchQueue.main.async {
+                submitTask()
+            }
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            DispatchQueue.main.async {
+                windowManager.closeQuickAddModal()
+            }
+            return .handled
+        }
+    }
+    
+    // Focus the text field
+    private func focusTextField() {
+        if let window = windowManager.quickAddWindow,
+           let textField = window.contentView?.firstTextField() {
+            window.makeFirstResponder(textField)
+        }
+    }
+    
+    // Focus the dummy element to shift focus away from text field
+    private func focusDummyElement() {
+        if let window = windowManager.quickAddWindow,
+           let dummyView = window.contentView?.findDummyNSView() {
+            window.makeFirstResponder(dummyView)
         }
     }
     
@@ -1892,8 +2105,8 @@ struct QuickAddView: View {
         
         let trimmedText = taskText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedText.isEmpty {
-            // Add the task
-            windowManager.addTask(trimmedText)
+            // Create a new task with the selected priority
+            _ = windowManager.addTaskWithPriority(trimmedText, priority: selectedPriority)
             
             // Close first, then clear text - avoids visual glitches
             windowManager.closeQuickAddModal()
@@ -1912,6 +2125,7 @@ struct FocusableTextField: NSViewRepresentable {
     @Binding var text: String
     var onSubmit: () -> Void
     var onCancel: () -> Void
+    var onTab: () -> Void
     
     class AutoFocusTextField: NSTextField {
         // Disable field editor to avoid remote view controller issues
@@ -1919,6 +2133,9 @@ struct FocusableTextField: NSViewRepresentable {
         
         // Ensure this field accepts first responder status
         override var acceptsFirstResponder: Bool { return true }
+        
+        // Callback for Tab key press
+        var onTab: (() -> Void)?
         
         // Keep track of event monitor for cleanup
         var eventMonitor: Any?
@@ -1928,12 +2145,35 @@ struct FocusableTextField: NSViewRepresentable {
                 NSEvent.removeMonitor(monitor)
             }
         }
+        
+        // Override to prevent default selection behavior
+        override func becomeFirstResponder() -> Bool {
+            let result = super.becomeFirstResponder()
+            if result, let currentEditor = currentEditor() {
+                // Move cursor to end instead of selecting all text
+                let length = stringValue.count
+                currentEditor.selectedRange = NSRange(location: length, length: 0)
+            }
+            return result
+        }
+        
+        // Override keyDown to catch Tab key
+        override func keyDown(with event: NSEvent) {
+            if event.keyCode == 48 && !event.modifierFlags.contains(.shift) { // Tab key without shift
+                onTab?()
+                return // Consume the event
+            }
+            
+            // Pass other keys to default handler
+            super.keyDown(with: event)
+        }
     }
     
     func makeNSView(context: Context) -> NSTextField {
         let textField = AutoFocusTextField()
         textField.delegate = context.coordinator
         textField.stringValue = text
+        textField.onTab = onTab
         
         // Appearance
         textField.font = .systemFont(ofSize: 24, weight: .medium)
@@ -1943,8 +2183,16 @@ struct FocusableTextField: NSViewRepresentable {
         textField.isBordered = false
         textField.focusRingType = .none
         
-        // Center text vertically by adjusting the frame
-        textField.cell?.titleRect(forBounds: NSRect(x: 0, y: 0, width: 380, height: 60))
+        // Make text field taller - adjust height
+        let cellHeight: CGFloat = 40 // Increase height to 80px
+        textField.frame = NSRect(x: 0, y: 0, width: 380, height: cellHeight)
+        
+        // Center text vertically with the taller height
+        if let cell = textField.cell as? NSTextFieldCell {
+            cell.titleRect(forBounds: NSRect(x: 0, y: 0, width: 380, height: cellHeight))
+            // Set vertical alignment
+            cell.setAccessibilityFrame(NSRect(x: 0, y: 0, width: 380, height: cellHeight))
+        }
         
         // Placeholder
         textField.placeholderString = "Add a new task..."
@@ -1956,31 +2204,23 @@ struct FocusableTextField: NSViewRepresentable {
             ]
         )
         
-        // Improve behavior
+        // Custom behaviors
         textField.refusesFirstResponder = false
         textField.isEditable = true
         textField.isSelectable = true
-        
-        // Clean up any existing event monitor and add a new one for key events
-        if let existingMonitor = textField.eventMonitor {
-            NSEvent.removeMonitor(existingMonitor)
-        }
-        
-        // Create a local key event monitor that catches delete keys
-        textField.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 51 || event.keyCode == 117 { // Delete or Forward Delete
-                return event // Allow delete keys to work normally
-            }
-            return event
-        }
         
         return textField
     }
     
     func updateNSView(_ nsView: NSTextField, context: Context) {
-        // Only update if text changed to avoid losing cursor position
+        // Only update text value from binding if it's actually different
         if nsView.stringValue != text {
             nsView.stringValue = text
+        }
+        
+        // Update callback
+        if let textField = nsView as? AutoFocusTextField {
+            textField.onTab = onTab
         }
     }
     
@@ -2021,8 +2261,14 @@ struct FocusableTextField: NSViewRepresentable {
                     }
                 }
                 return true
+            } else if commandSelector == #selector(NSResponder.insertTab(_:)) {
+                parent.onTab()
+                return true
+            } else if commandSelector == #selector(NSResponder.insertBacktab(_:)) {
+                // Shift+Tab is handled at the QuickAddView level
+                return false
             }
-            return false
+            return false // Allow other commands
         }
     }
 }
@@ -2061,6 +2307,63 @@ extension NSView {
         
         return nil
     }
+    
+    // Helper to find the dummy view
+    func findDummyNSView() -> DummyView.DummyNSView? {
+        // If this is a dummy view, return it
+        if let dummyView = self as? DummyView.DummyNSView {
+            return dummyView
+        }
+        
+        // Search recursively
+        for subview in subviews {
+            if let dummyView = subview.findDummyNSView() {
+                return dummyView
+            }
+        }
+        
+        return nil
+    }
+}
+
+// Dummy NSViewRepresentable to act as an inert focus target
+struct DummyView: NSViewRepresentable {
+    class DummyNSView: NSView {
+        // Accept first responder status
+        override var acceptsFirstResponder: Bool { return true }
+        
+        // Draw nothing
+        override func draw(_ dirtyRect: NSRect) {}
+        
+        // Zero size by default
+        override var intrinsicContentSize: NSSize { return .zero }
+        
+        // Override to handle key events when focused
+        override func keyDown(with event: NSEvent) {
+            // Don't need to handle anything here - we want the SwiftUI view's .onKeyPress handlers to catch the events
+            // Just don't pass to super to avoid beeps
+        }
+        
+        // Focus ring is hidden
+        override var focusRingType: NSFocusRingType {
+            get { return .none }
+            set { }
+        }
+        
+        // Handle when becoming first responder
+        override func becomeFirstResponder() -> Bool {
+            // Accept becoming first responder, but don't show any visual indicators
+            return super.becomeFirstResponder()
+        }
+    }
+
+    func makeNSView(context: Context) -> DummyNSView {
+        let view = DummyNSView()
+        view.wantsLayer = true
+        return view
+    }
+
+    func updateNSView(_ nsView: DummyNSView, context: Context) {}
 }
 
 #Preview {
