@@ -34,6 +34,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationWillBecomeActive(_ notification: Notification) {
+        // We don't want to do anything special when the app becomes active
+        // This helps preserve the separation between main app and quick add modal
+        
+        /* Original code commented out
         // Access the shared WindowManager instance
         let windowManager = WindowManager.shared
         
@@ -41,5 +45,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if windowManager.isQuickAddVisible, let quickAddWindow = windowManager.quickAddWindow {
             quickAddWindow.makeKeyAndOrderFront(nil)
         }
+        */
     }
 } 

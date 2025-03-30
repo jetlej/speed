@@ -568,48 +568,33 @@ class WindowManager: ObservableObject {
             closeQuickAddModal()
             return
         }
-        
-        // Create a clean panel with minimal style
-        let panel = NSPanel(
+
+        // Create a completely detached accessory window
+        let panel = FocusableBorderlessPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 60),
-            styleMask: [.titled, .fullSizeContentView],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-        
-        // Configure panel appearance
-        panel.backgroundColor = .black
+
+        // Critical setting: make it a non-activating panel
+        panel.becomesKeyOnlyIfNeeded = false
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
         panel.hasShadow = true
-        panel.level = .floating
+        panel.level = .modalPanel  // Higher level to appear above other windows
         panel.isMovableByWindowBackground = true
-        panel.titleVisibility = .hidden
-        panel.titlebarAppearsTransparent = true
+        panel.hidesOnDeactivate = false
         
-        // Create a zero-height toolbar
-        let toolbar = NSToolbar(identifier: "EmptyToolbar")
-        toolbar.showsBaselineSeparator = false
-        toolbar.displayMode = .iconOnly
-        toolbar.sizeMode = .small
-        panel.toolbar = toolbar
+        // Special flags to really detach from the app's window hierarchy
+        panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary, .ignoresCycle]
+        panel.isReleasedWhenClosed = false
+        panel.isFloatingPanel = true
         
-        // Force zero-height titlebar through additional settings
-        if let customTitlebar = panel.standardWindowButton(.closeButton)?.superview?.superview {
-            customTitlebar.isHidden = true
-        }
-        
-        // Set up appearance
+        // Ensure content view has rounded corners
         panel.contentView?.wantsLayer = true
         panel.contentView?.layer?.cornerRadius = 10
         panel.contentView?.layer?.masksToBounds = true
-        
-        // Hide window buttons
-        panel.standardWindowButton(.closeButton)?.isHidden = true
-        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        panel.standardWindowButton(.zoomButton)?.isHidden = true
-        
-        // Panel behavior
-        panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
-        panel.isReleasedWhenClosed = false
         
         // Center the panel on screen
         if let mainScreen = NSScreen.main {
@@ -619,65 +604,73 @@ class WindowManager: ObservableObject {
             let y = screenFrame.midY - windowFrame.height / 2
             panel.setFrameOrigin(NSPoint(x: x, y: y))
         }
-        
+
         // Create and set the SwiftUI view
         let quickAddView = QuickAddView().environmentObject(self)
         let hostingController = NSHostingController(rootView: quickAddView)
         hostingController.view.frame = NSRect(x: 0, y: 0, width: 400, height: 60)
         panel.contentView = hostingController.view
-        
+
         // Store reference to panel
         quickAddWindow = panel
         isQuickAddVisible = true
+
+        // Simply order it front without making it key
+        panel.orderFrontRegardless()
         
-        // Show window and make it key
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        panel.makeKeyAndOrderFront(nil)
-        
-        // Focus the text field after a slight delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            if let textField = panel.contentView?.firstTextField() {
-                panel.makeFirstResponder(textField)
+        // Now make it key after a delay so it doesn't bring the app forward
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            panel.makeKey()
+            
+            // Wait until it's visible and try to focus the text field
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                if let textField = panel.contentView?.firstTextField() {
+                    panel.makeFirstResponder(textField)
+                }
             }
         }
     }
-    
-    private func makeTextFieldFirstResponder(in view: NSView?) {
-        guard let view = view else { return }
-        
-        // If this view is a text field, make it first responder
-        if let textField = view as? NSTextField {
-            view.window?.makeFirstResponder(textField)
-            return
-        }
-        
-        // Otherwise, search through child views
-        for subview in view.subviews {
-            makeTextFieldFirstResponder(in: subview)
-        }
-    }
-    
+
     func closeQuickAddModal() {
         // Ensure we're on the main thread
         DispatchQueue.main.async {
             if let window = self.quickAddWindow {
-                // First resign key status
+                // Just order out rather than trying to hide or close
                 window.resignKey()
-                
-                // Then order out (don't close, which can cause issues)
                 window.orderOut(nil)
                 
-                // Clear references after a small delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.quickAddWindow = nil
-                    self.isQuickAddVisible = false
-                }
+                // Clear references immediately
+                self.quickAddWindow = nil
+                self.isQuickAddVisible = false
             } else {
                 // Safety in case window is already gone
                 self.quickAddWindow = nil
                 self.isQuickAddVisible = false
             }
         }
+    }
+}
+
+// Custom NSPanel subclass to allow becoming key even when borderless
+class FocusableBorderlessPanel: NSPanel {
+    override var canBecomeKey: Bool {
+        return true
+    }
+    
+    // Prevent this window from bringing the app forward
+    override func becomeKey() {
+        super.becomeKey()
+    }
+    
+    // Ensure this window can become main without activating the app
+    override var canBecomeMain: Bool {
+        return true
+    }
+    
+    // Override to prevent activation
+    override func makeKeyAndOrderFront(_ sender: Any?) {
+        // Just order front without the makeKey part
+        self.orderFront(sender)
     }
 }
 
@@ -1862,10 +1855,14 @@ struct QuickAddView: View {
     
     var body: some View {
         ZStack {
-            // Draggable background
+            // Draggable background with border
             Rectangle()
                 .fill(Color.black)
                 .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
                 .allowsHitTesting(false)
             
             // Make the entire view draggable
@@ -1885,15 +1882,7 @@ struct QuickAddView: View {
         }
         .frame(width: 400, height: 60)
         .onAppear {
-            // Set focus when the view appears
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                if let window = windowManager.quickAddWindow {
-                    window.makeKeyAndOrderFront(nil)
-                    if let textField = window.contentView?.firstTextField() {
-                        window.makeFirstResponder(textField)
-                    }
-                }
-            }
+            // Minimal work in onAppear - we're handling focus in WindowManager
         }
     }
     
@@ -1903,20 +1892,13 @@ struct QuickAddView: View {
         
         let trimmedText = taskText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedText.isEmpty {
-            let taskToAdd = trimmedText // Create local copy
+            // Add the task
+            windowManager.addTask(trimmedText)
             
-            // Clear text immediately
+            // Close first, then clear text - avoids visual glitches
+            windowManager.closeQuickAddModal()
             taskText = ""
-            
-            // Add the task and close the modal immediately
-            DispatchQueue.main.async {
-                // Add the task
-                windowManager.addTask(taskToAdd)
-                
-                // Close modal immediately
-                windowManager.closeQuickAddModal()
-                self.isSubmitting = false
-            }
+            isSubmitting = false
         } else {
             // Just close the modal if empty
             windowManager.closeQuickAddModal()

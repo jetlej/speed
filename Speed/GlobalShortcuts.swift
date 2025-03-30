@@ -47,7 +47,8 @@ class GlobalShortcuts {
             let windowManager = WindowManager.shared
             
             DispatchQueue.main.async {
-                NSApplication.shared.activate(ignoringOtherApps: true)
+                // Don't activate app for quick add - let it float independently
+                // NSApplication.shared.activate(ignoringOtherApps: true)
                 windowManager.showQuickAddModal()
             }
         }
