@@ -10,7 +10,7 @@ import AppKit
 
 @main
 struct SpeedApp: App {
-    @StateObject private var windowManager = WindowManager()
+    @StateObject private var windowManager = WindowManager.shared
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var didSetupShortcuts = false
     

@@ -32,4 +32,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func checkForUpdates() {
         updater.checkForUpdates()
     }
+    
+    func applicationWillBecomeActive(_ notification: Notification) {
+        // Access the shared WindowManager instance
+        let windowManager = WindowManager.shared
+        
+        // If quick add modal is visible, make sure it gets focus
+        if windowManager.isQuickAddVisible, let quickAddWindow = windowManager.quickAddWindow {
+            quickAddWindow.makeKeyAndOrderFront(nil)
+        }
+    }
 } 

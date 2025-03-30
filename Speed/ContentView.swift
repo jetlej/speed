@@ -47,12 +47,16 @@ struct Task: Identifiable, Equatable, Codable {
 }
 
 class WindowManager: ObservableObject {
+    static let shared = WindowManager()
+    
     @Published var isSpeedMode = false
     @Published var isAnimating = false
     @Published var lastSpeedPosition: NSPoint?
     @Published var tasks: [Task] = []
     @Published var shouldFocusInput = false
     @Published var zoomLevel: Double = 1.0
+    @Published var isQuickAddVisible = false
+    var quickAddWindow: NSWindow?
     private var isSettingFrame = false
     private var positionObserver: NSObjectProtocol?
     private var undoManager: UndoManager? {
@@ -557,6 +561,105 @@ class WindowManager: ObservableObject {
             height: proposedFrame.height
         )
     }
+    
+    func showQuickAddModal() {
+        // If already showing, close it instead
+        if isQuickAddVisible {
+            closeQuickAddModal()
+            return
+        }
+        
+        // Create a purely borderless window - no title bar, no reserved space
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 60),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        
+        // Configure window appearance
+        window.backgroundColor = .black
+        window.hasShadow = true
+        window.level = .floating
+        window.isMovableByWindowBackground = true
+        window.isMovable = true
+        
+        // Critical window properties
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.cornerRadius = 10
+        window.contentView?.layer?.masksToBounds = true
+        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+        window.isReleasedWhenClosed = false
+        
+        // Center on screen
+        if let mainScreen = NSScreen.main {
+            let screenFrame = mainScreen.visibleFrame
+            let windowFrame = window.frame
+            let x = screenFrame.midX - windowFrame.width / 2
+            let y = screenFrame.midY - windowFrame.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+        
+        // Create and set the SwiftUI view
+        let quickAddView = QuickAddView().environmentObject(self)
+        let hostingController = NSHostingController(rootView: quickAddView)
+        hostingController.view.frame = NSRect(x: 0, y: 0, width: 400, height: 60)
+        window.contentView = hostingController.view
+        
+        // Store reference
+        quickAddWindow = window
+        isQuickAddVisible = true
+        
+        // Show window and activate
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        window.orderFrontRegardless()
+        window.makeKeyAndOrderFront(nil)
+        
+        // Focus the text field
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let textField = window.contentView?.firstTextField() {
+                window.makeFirstResponder(textField)
+            }
+        }
+    }
+    
+    private func makeTextFieldFirstResponder(in view: NSView?) {
+        guard let view = view else { return }
+        
+        // If this view is a text field, make it first responder
+        if let textField = view as? NSTextField {
+            view.window?.makeFirstResponder(textField)
+            return
+        }
+        
+        // Otherwise, search through child views
+        for subview in view.subviews {
+            makeTextFieldFirstResponder(in: subview)
+        }
+    }
+    
+    func closeQuickAddModal() {
+        // Ensure we're on the main thread
+        DispatchQueue.main.async {
+            if let window = self.quickAddWindow {
+                // First resign key status
+                window.resignKey()
+                
+                // Then order out (don't close, which can cause issues)
+                window.orderOut(nil)
+                
+                // Clear references after a small delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.quickAddWindow = nil
+                    self.isQuickAddVisible = false
+                }
+            } else {
+                // Safety in case window is already gone
+                self.quickAddWindow = nil
+                self.isQuickAddVisible = false
+            }
+        }
+    }
 }
 
 struct ContentView: View {
@@ -643,6 +746,9 @@ struct CustomTextField: NSViewRepresentable {
     func makeNSView(context: Context) -> NSTextField {
         let textField = NSTextField()
         textField.delegate = context.coordinator
+        textField.stringValue = text
+        
+        // Appearance
         textField.backgroundColor = .clear
         textField.isBordered = false
         textField.textColor = .white
@@ -678,6 +784,149 @@ struct CustomTextField: NSViewRepresentable {
                 }
                 context.coordinator.hasInitialFocus = true
             }
+        }
+    }
+}
+
+// Text field specifically for the Quick Add modal
+struct FocusableTextField: NSViewRepresentable {
+    @Binding var text: String
+    var onSubmit: () -> Void
+    var onCancel: () -> Void
+    
+    // Custom container to precisely position the text field
+    class CenteredTextFieldContainer: NSView {
+        let textField = AutoFocusTextField()
+        var eventMonitor: Any?
+        
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            
+            // Add the text field as a subview
+            addSubview(textField)
+            
+            // Set up the text field's frame
+            textField.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                textField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+                textField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+                textField.centerYAnchor.constraint(equalTo: centerYAnchor),
+                textField.heightAnchor.constraint(equalToConstant: 40)
+            ])
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            // Make sure we don't interfere with event handling
+            let result = super.hitTest(point)
+            return result == self ? textField : result
+        }
+        
+        deinit {
+            if let monitor = eventMonitor {
+                NSEvent.removeMonitor(monitor)
+            }
+        }
+    }
+    
+    class AutoFocusTextField: NSTextField {
+        // Disable field editor to avoid remote view controller issues
+        override var allowsVibrancy: Bool { return false }
+        
+        // Ensure this field accepts first responder status
+        override var acceptsFirstResponder: Bool { return true }
+    }
+    
+    func makeNSView(context: Context) -> CenteredTextFieldContainer {
+        let container = CenteredTextFieldContainer(frame: .zero)
+        let textField = container.textField
+        
+        textField.delegate = context.coordinator
+        textField.stringValue = text
+        
+        // Appearance
+        textField.font = .systemFont(ofSize: 24, weight: .medium)
+        textField.textColor = .white
+        textField.backgroundColor = .black
+        textField.drawsBackground = false
+        textField.isBordered = false
+        textField.focusRingType = .none
+        
+        // Placeholder
+        textField.placeholderString = "Add a new task..."
+        textField.placeholderAttributedString = NSAttributedString(
+            string: "Add a new task...",
+            attributes: [
+                .foregroundColor: NSColor.white.withAlphaComponent(0.3),
+                .font: NSFont.systemFont(ofSize: 24, weight: .medium)
+            ]
+        )
+        
+        // Behavior settings
+        textField.isEditable = true
+        textField.isSelectable = true
+        textField.refusesFirstResponder = false
+        
+        // Set up keyboard event monitoring for delete keys
+        container.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 51 || event.keyCode == 117 { // Delete or Forward Delete
+                return event // Allow delete keys
+            }
+            return event
+        }
+        
+        return container
+    }
+    
+    func updateNSView(_ nsView: CenteredTextFieldContainer, context: Context) {
+        // Only update if changed to avoid cursor issues
+        if nsView.textField.stringValue != text {
+            nsView.textField.stringValue = text
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        var parent: FocusableTextField
+        var isSubmitting = false
+        
+        init(_ parent: FocusableTextField) {
+            self.parent = parent
+            super.init()
+        }
+        
+        func controlTextDidChange(_ obj: Notification) {
+            guard let textField = obj.object as? NSTextField else { return }
+            parent.text = textField.stringValue
+        }
+        
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                if !isSubmitting {
+                    isSubmitting = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.parent.onSubmit()
+                        self?.isSubmitting = false
+                    }
+                }
+                return true
+            } else if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                if !isSubmitting {
+                    isSubmitting = true
+                    DispatchQueue.main.async { [weak self] in
+                        self?.parent.onCancel()
+                        self?.isSubmitting = false
+                    }
+                }
+                return true
+            }
+            return false
         }
     }
 }
@@ -1726,6 +1975,109 @@ struct HoverView: NSViewRepresentable {
         if let view = nsView as? HoverViewImpl {
             view.onHoverChange = onHoverChange
         }
+    }
+}
+
+// QuickAddView - Command K-style modal for quick task entry
+struct QuickAddView: View {
+    @EnvironmentObject var windowManager: WindowManager
+    @State private var taskText: String = ""
+    @State private var isSubmitting = false
+    
+    var body: some View {
+        ZStack {
+            // Background
+            Rectangle()
+                .fill(Color.black)
+                .cornerRadius(10)
+                .allowsHitTesting(false)
+            
+            // Make the entire view draggable
+            DraggableView()
+            
+            // Our perfectly centered text field container
+            FocusableTextField(
+                text: $taskText,
+                onSubmit: { submitTask() },
+                onCancel: { windowManager.closeQuickAddModal() }
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(width: 400, height: 60)
+        .onAppear {
+            // Set focus when the view appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if let window = windowManager.quickAddWindow {
+                    window.makeKeyAndOrderFront(nil)
+                    if let textField = window.contentView?.firstTextField() {
+                        window.makeFirstResponder(textField)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func submitTask() {
+        guard !isSubmitting else { return }
+        isSubmitting = true
+        
+        let trimmedText = taskText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedText.isEmpty {
+            let taskToAdd = trimmedText // Create local copy
+            
+            // Clear text immediately
+            taskText = ""
+            
+            // Add the task and close the modal immediately
+            DispatchQueue.main.async {
+                // Add the task
+                windowManager.addTask(taskToAdd)
+                
+                // Close modal immediately
+                windowManager.closeQuickAddModal()
+                self.isSubmitting = false
+            }
+        } else {
+            // Just close the modal if empty
+            windowManager.closeQuickAddModal()
+            isSubmitting = false
+        }
+    }
+}
+
+struct NSWindowDragHandler: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        
+        // Make the window draggable
+        DispatchQueue.main.async {
+            view.window?.standardWindowButton(.closeButton)?.isHidden = true
+            view.window?.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            view.window?.standardWindowButton(.zoomButton)?.isHidden = true
+            view.window?.isMovableByWindowBackground = true
+        }
+        
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+extension NSView {
+    func firstTextField() -> NSTextField? {
+        // If this is a text field, return it
+        if let textField = self as? NSTextField {
+            return textField
+        }
+        
+        // Search subviews recursively
+        for subview in subviews {
+            if let textField = subview.firstTextField() {
+                return textField
+            }
+        }
+        
+        return nil
     }
 }
 

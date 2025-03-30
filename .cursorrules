@@ -16,6 +16,11 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Release processes are changed
   - Version management is updated
 
+## Development Rules
+
+- Do not run terminal commands to open the app in Xcode
+- The app should be run directly from Xcode for testing
+
 ## Release Management
 
 ### Version Control
@@ -80,6 +85,21 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Completed tasks are hidden but preserved in storage
 - Tasks persist between app launches and window reopens
 - Full undo/redo support for all task operations
+
+### Quick Add Modal
+
+- Triggered by global Command + Option + N shortcut from any app
+- Command K-style modal appears above all other apps
+- Black background with 10px rounded corners
+- Fixed size of 400x60 pixels
+- Centered on screen
+- White text on black background
+- Text field automatically focused for immediate typing
+- Submit task by pressing Enter
+- Auto-close on submission
+- Press Escape to cancel and close
+- Draggable from anywhere in the window
+- Floating window level (stays above other windows)
 
 ### Task Selection and Movement
 
@@ -208,6 +228,16 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Smooth fade transition between task text and controls
 - "All tasks completed!" message when no tasks remain
 
+#### Quick Add Modal
+
+- Fixed size: 400x60
+- Black background
+- White text in text field
+- 10px rounded corners
+- Auto-focused text field with 16pt medium font
+- No window controls
+- Draggable from anywhere
+
 ## Behavior Rules
 
 ### Window Management
@@ -218,6 +248,8 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
 - Smooth spring animation between modes
 - Window level changes to float in Speed Mode
 - UI elements fade in after window animation completes (0.15s delay)
+- Quick Add modal appears centered by default
+- Quick Add modal floats above all other windows
 
 ### Task Handling
 
@@ -237,6 +269,11 @@ Speed is a minimal macOS task management app with a unique "Speed Mode" feature 
   - Editing task text
   - Deleting tasks
   - Reordering tasks
+
+### Global Shortcuts
+
+- Option + Command + Enter: Toggle Speed Mode (when tasks exist)
+- Option + Command + N: Show Quick Add modal from any app
 
 ### Visual States
 
