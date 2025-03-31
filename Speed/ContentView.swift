@@ -40,10 +40,20 @@ struct Task: Identifiable, Equatable, Codable {
     var isCompleted: Bool
     var completedAt: Date?
     var isFrog: Bool = false
-    var priority: Int = 1 // Default priority (1-5 scale)
+    var priority: Int = 1 // Default priority (1-3 scale)
     
     enum CodingKeys: String, CodingKey {
         case id, title, isCompleted, completedAt, isFrog, priority
+    }
+    
+    // This initializer helps convert any priority value to the valid 1-3 range
+    init(title: String, isCompleted: Bool, completedAt: Date? = nil, isFrog: Bool = false, priority: Int = 1) {
+        self.title = title
+        self.isCompleted = isCompleted
+        self.completedAt = completedAt
+        self.isFrog = isFrog
+        // Ensure priority is within the valid range of 1-3
+        self.priority = max(1, min(3, priority))
     }
 }
 
@@ -181,7 +191,7 @@ class WindowManager: ObservableObject {
     
     func addTask(_ title: String) -> UUID {
         let oldTasks = tasks
-        let newTask = Task(title: title, isCompleted: false)
+        let newTask = Task(title: title, isCompleted: false, priority: 1)
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             tasks.append(newTask)
         }
@@ -195,7 +205,7 @@ class WindowManager: ObservableObject {
         let oldTasks = tasks
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             let newTasks = titles.map { title in
-                Task(title: cleanTaskTitle(title), isCompleted: false)
+                Task(title: cleanTaskTitle(title), isCompleted: false, priority: 1)
             }
             tasks.append(contentsOf: newTasks)
         }
@@ -672,7 +682,9 @@ class WindowManager: ObservableObject {
 
     func addTaskWithPriority(_ title: String, priority: Int) -> UUID {
         let oldTasks = tasks
-        let newTask = Task(title: title, isCompleted: false, priority: priority)
+        // Ensure the priority is within the valid range of 1-3
+        let validPriority = max(1, min(3, priority))
+        let newTask = Task(title: title, isCompleted: false, priority: validPriority)
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             tasks.append(newTask)
         }
@@ -1471,6 +1483,30 @@ struct TaskRow: View {
     @State private var isCheckboxHovered = false
     @ObservedObject var windowManager: WindowManager
     
+    // Function to get color based on priority
+    private func priorityColor(_ priority: Int) -> Color {
+        switch priority {
+        case 3: return .white // 100% opacity
+        case 2: return Color.white.opacity(0.40) // 40% opacity
+        case 1: return Color.white.opacity(0.20) // 10% opacity
+        default: return Color.white.opacity(0.20) // Default to lowest opacity
+        }
+    }
+    
+    // Function to get text opacity based on priority and hover state
+    private func textOpacity(_ priority: Int, isHovered: Bool) -> Double {
+        if isHovered || isSelected || task.isFrog {
+            return 1.0 // Full opacity when hovered, selected, or is a frog task
+        }
+        
+        switch priority {
+        case 3: return 1.0 // 100% opacity
+        case 2: return 0.40 // 40% opacity
+        case 1: return 0.20 // 10% opacity
+        default: return 0.20 // Default to lowest opacity
+        }
+    }
+    
     var body: some View {
         ZStack {
             // Background layer
@@ -1543,6 +1579,7 @@ struct TaskRow: View {
                             .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .regular, design: .default))
                             .strikethrough(task.isCompleted)
                             .foregroundColor(task.isCompleted ? .gray : (task.isFrog ? Color(hex: "8CFF00") : .white))
+                            .opacity(task.isCompleted ? 1.0 : textOpacity(task.priority, isHovered: isHovered))
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1550,16 +1587,15 @@ struct TaskRow: View {
                     }
                 }
                 
-                // Empty space with fixed width for frog button spacing
-                if isHovered || task.isFrog {
-                    Spacer()
-                        .frame(width: 20 * windowManager.zoomLevel)
-                }
+                // Priority number (no background circle, just colored text)
+                Text("\(task.priority)")
+                    .font(.system(size: 14 * windowManager.zoomLevel, weight: .bold))
+                    .foregroundColor(priorityColor(task.priority))
             }
             .padding(.vertical, 6 * windowManager.zoomLevel)
             .padding(.horizontal, 14 * windowManager.zoomLevel)
             
-            // Frog button as overlay in absolute position
+            // Frog button as overlay in absolute position to the right of task text and left of priority
             if isHovered || task.isFrog {
                 HStack {
                     Spacer()
@@ -1579,7 +1615,7 @@ struct TaskRow: View {
                             NSCursor.pop()
                         }
                     }
-                    .padding(.trailing, 14 * windowManager.zoomLevel)
+                    .padding(.trailing, 30 * windowManager.zoomLevel) // Increase padding to position it to the left of priority
                 }
                 .padding(.vertical, 6 * windowManager.zoomLevel)
             }
@@ -1711,11 +1747,13 @@ struct SpeedModeView: View {
                 if isHovered {
                     ZStack {
                         // Task title in the middle, visible through transparent buttons
-                        Text((task.isFrog ? "🐸 " : "") + task.title)
-                            .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .medium, design: .default))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .foregroundColor(task.isFrog ? Color(hex: "8CFF00") : .white)
+                        HStack(spacing: 8 * windowManager.zoomLevel) {
+                            Text((task.isFrog ? "🐸 " : "") + task.title)
+                                .font(.system(size: 16 * windowManager.zoomLevel, weight: task.isFrog ? .bold : .medium, design: .default))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .foregroundColor(task.isFrog ? Color(hex: "8CFF00") : .white)
+                        }
                         
                         // Buttons as overlay
                         HStack(spacing: 0) {
@@ -2022,7 +2060,7 @@ struct QuickAddView: View {
                 // Priority buttons container
                 VStack {
                     HStack(spacing: 0) {
-                        ForEach(1...5, id: \.self) { priority in
+                        ForEach(1...3, id: \.self) { priority in
                             PriorityButton(
                                 number: priority,
                                 isSelected: selectedPriority == priority,
@@ -2054,7 +2092,7 @@ struct QuickAddView: View {
             return .ignored
         }
         .onKeyPress(.rightArrow) {
-            if focusState == .priorityButtons && selectedPriority < 5 {
+            if focusState == .priorityButtons && selectedPriority < 3 {
                 selectedPriority += 1
                 return .handled
             }
